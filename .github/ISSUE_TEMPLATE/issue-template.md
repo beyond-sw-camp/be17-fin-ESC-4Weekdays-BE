@@ -7,10 +7,10 @@ assignees: ''
 
 ---
 
-📝 Description
+# 📝 Description
 feat: 작업의 내용을 요약합니다. (예: 회원 기능을 개발한다.) 
 
-✅ Tasks
+# ✅ Tasks
 - [ ] 세부 작업 1
 - [ ] 세부 작업 2
 - [ ] PR 생성 
