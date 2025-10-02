@@ -1,12 +1,11 @@
 package com.fourweekdays.fourweekdays.outbound;
 
-import com.fourweekdays.fourweekdays.franchise.FranchiseStore;
-import com.fourweekdays.fourweekdays.product.Product;
+import com.fourweekdays.fourweekdays.common.BaseEntity;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "outbound")
-public class Outbound {
+public class Outbound extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long outboundId; // 출고 ID

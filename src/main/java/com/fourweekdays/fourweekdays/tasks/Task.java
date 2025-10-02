@@ -1,6 +1,7 @@
 package com.fourweekdays.fourweekdays.tasks;
 
 import com.fourweekdays.fourweekdays.Inbound.Inbound;
+import com.fourweekdays.fourweekdays.common.BaseEntity;
 import com.fourweekdays.fourweekdays.inventory.Inventory;
 import com.fourweekdays.fourweekdays.member.Member;
 import com.fourweekdays.fourweekdays.outbound.Outbound;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
-public class Task {
+public class Task extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

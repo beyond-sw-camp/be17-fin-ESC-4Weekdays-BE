@@ -1,5 +1,6 @@
 package com.fourweekdays.fourweekdays.order;
 
+import com.fourweekdays.fourweekdays.common.BaseEntity;
 import com.fourweekdays.fourweekdays.franchise.FranchiseStore;
 import com.fourweekdays.fourweekdays.product.Product;
 import jakarta.persistence.*;
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
-public class Order {
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

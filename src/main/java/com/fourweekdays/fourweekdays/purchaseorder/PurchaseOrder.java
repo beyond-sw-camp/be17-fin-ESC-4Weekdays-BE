@@ -1,11 +1,12 @@
 package com.fourweekdays.fourweekdays.purchaseorder;
 
+import com.fourweekdays.fourweekdays.common.BaseEntity;
 import com.fourweekdays.fourweekdays.franchise.FranchiseStore;
 import com.fourweekdays.fourweekdays.product.Product;
 import jakarta.persistence.*;
 
 @Entity
-public class PurchaseOrder {
+public class PurchaseOrder extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

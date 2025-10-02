@@ -1,14 +1,15 @@
 package com.fourweekdays.fourweekdays.inventory;
 
+import com.fourweekdays.fourweekdays.common.BaseEntity;
 import com.fourweekdays.fourweekdays.product.Product;
 import jakarta.persistence.*;
 
 @Entity
-public class Inventory {
+public class Inventory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long stockId; // 재고 ID
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

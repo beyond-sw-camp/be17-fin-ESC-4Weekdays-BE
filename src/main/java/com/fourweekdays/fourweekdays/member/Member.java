@@ -10,7 +10,7 @@ public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long memberId; // 직원/사용자 ID (PK)
+    private Long id; // 직원/사용자 ID (PK)
 
     private String email;
     private String password;

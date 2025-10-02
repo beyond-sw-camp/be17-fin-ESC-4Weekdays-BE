@@ -1,4 +1,4 @@
-package com.fourweekdays.fourweekdays.domain;
+package com.fourweekdays.fourweekdays.product;
 
 import com.fourweekdays.fourweekdays.common.BaseEntity;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import java.time.LocalDateTime;
 
 @Entity
-public class Product extends BaseEntity{
+public class Product extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 상품 ID

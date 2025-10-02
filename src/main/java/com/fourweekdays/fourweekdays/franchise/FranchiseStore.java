@@ -21,5 +21,5 @@ public class FranchiseStore extends BaseEntity {
     private Address address; // 주소
 
     @Enumerated(EnumType.STRING)
-    private StoreStatus status; // (ACTIVE / INACTIVE)
+    private FranchiseStatus status; // (ACTIVE / INACTIVE)
 }
