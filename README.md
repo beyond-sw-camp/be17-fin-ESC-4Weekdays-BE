@@ -19,7 +19,7 @@
 <table align="center">
   <tr>
   
-  [🔗프로젝트 기획서](https://github.com/beyond-sw-camp/be17-fin-ESC-4Weekdays-BE/tree/main/docs/ESC_프로젝트_기획서_4Weekdays.pdf)
+  [🔗프로젝트 기획서](https://github.com/beyond-sw-camp/be17-fin-ESC-4Weekdays-BE/tree/main/docs/ESC_요구사항_정의서_4Weekdays.pdf)
 
 # 1. 개요
 
@@ -101,4 +101,5 @@
   <tr>
 
   </tr>
+
 
