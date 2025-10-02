@@ -97,9 +97,10 @@
 
 ## 🖥️ 시스템 아키텍쳐
 <table align="center">
-  <img src="./docs/시스템 아키텍쳐 - 복사본.png" width="400" alt="ESC 로고" />  
+  <img src="./docs/시스템 아키텍쳐.png" width="400" alt="ESC 로고" />  
   <tr>
 
   </tr>
+
 
 
