@@ -14,7 +14,7 @@ public class VendorReadDto {
     private String name;
     private String phoneNumber;
     private String email;
-    private String address;
+    private Address address;
 
     public static VendorReadDto from(Vendor entity) {
         return  VendorReadDto.builder()
@@ -23,7 +23,7 @@ public class VendorReadDto {
                 .name(entity.getName())
                 .phoneNumber(entity.getPhoneNumber())
                 .email(entity.getEmail())
-//                .address(entity.getAddress())
+                .address(entity.getAddress())
                 .build();
     }
 }
