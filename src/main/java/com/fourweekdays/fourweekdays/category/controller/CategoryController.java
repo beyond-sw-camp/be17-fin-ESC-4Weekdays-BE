@@ -4,12 +4,14 @@ import com.fourweekdays.fourweekdays.category.dto.request.CategoryCreateDto;
 import com.fourweekdays.fourweekdays.category.dto.response.CategoryReadDto;
 import com.fourweekdays.fourweekdays.category.service.CategoryService;
 import com.fourweekdays.fourweekdays.common.BaseResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "카테고리 기능")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/category")

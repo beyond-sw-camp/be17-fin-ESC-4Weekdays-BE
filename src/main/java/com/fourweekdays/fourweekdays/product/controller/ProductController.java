@@ -7,6 +7,7 @@ import com.fourweekdays.fourweekdays.product.dto.request.ProductUpdateDto;
 import com.fourweekdays.fourweekdays.product.dto.response.ProductReadDto;
 import com.fourweekdays.fourweekdays.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "상품 기능")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/product")
