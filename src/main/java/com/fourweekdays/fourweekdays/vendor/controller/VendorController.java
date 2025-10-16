@@ -61,8 +61,8 @@ public class VendorController {
     }
 
     @Operation(
-            summary = "",
-            description = ""
+            summary = "거레처 삭제",
+            description = "거래처를 삭제한다"
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<BaseResponse<String>> deleteVendor(@PathVariable Long id) {
