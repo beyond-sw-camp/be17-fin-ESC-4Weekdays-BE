@@ -2,8 +2,6 @@ package com.fourweekdays.fourweekdays.tasks.model.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NonNull;
-import org.aspectj.bridge.IMessage;
 
 @Getter
 public class TaskAssignDto {

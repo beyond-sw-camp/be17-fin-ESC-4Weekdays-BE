@@ -1,4 +1,4 @@
-package com.fourweekdays.fourweekdays.tasks;
+package com.fourweekdays.fourweekdays.tasks.model.entity;
 
 import com.fourweekdays.fourweekdays.inbound.model.entity.Inbound;
 import com.fourweekdays.fourweekdays.common.BaseEntity;
@@ -17,11 +17,14 @@ public class Task extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 작업 ID (PK)
 
+//    @Column(nullable = false, unique = true, length = 50)
+//    private String taskNumber;  // 예) TSK-20251017-001
+
     @Enumerated(EnumType.STRING)
     private TaskType type; // 작업 유형 (입고 / 출고 / 재고조사 등)
 
     @Enumerated(EnumType.STRING)
-    private Status status; // 작업 상태 (할당됨 / 진행중 / 완료 / 취소)
+    private TaskStatus status; // 작업 상태 (할당됨 / 진행중 / 완료 / 취소)
 
     private String description; // 작업 설명 (예: "A상품 100개 입고 확인")
 
@@ -34,19 +37,18 @@ public class Task extends BaseEntity {
     private Member createdBy; // 작업 지시자 (관리자)
 
     // 관련 업무와 연결
-    @ManyToOne
-    @JoinColumn(name = "inbound_id")
-    private Inbound inbound; // 입고 관련 작업
-
-    @ManyToOne
-    @JoinColumn(name = "outbound_id")
-    private Outbound outbound; // 출고 관련 작업
-
-    @ManyToOne
-    @JoinColumn(name = "inventory_id")
-    private Inventory inventory; // 재고 관련 작업
-
-    private LocalDateTime startedAt;   // 작업 시작일시
-    private LocalDateTime completedAt; // 작업 완료일시
-
+//    @ManyToOne
+//    @JoinColumn(name = "inbound_id")
+//    private Inbound inbound; // 입고 관련 작업
+//
+//    @ManyToOne
+//    @JoinColumn(name = "outbound_id")
+//    private Outbound outbound; // 출고 관련 작업
+//
+//    @ManyToOne
+//    @JoinColumn(name = "inventory_id")
+//    private Inventory inventory; // 재고 관련 작업
+//
+//    private LocalDateTime startedAt;   // 작업 시작일시
+//    private LocalDateTime completedAt; // 작업 완료일시
 }
