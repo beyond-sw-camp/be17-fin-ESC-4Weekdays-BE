@@ -18,11 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:mariadb://192.0.2.51:3306/four_weekdays",
-        "spring.datasource.username=root",
-        "spring.datasource.password=qwer1234"
-})
 @Transactional
 @SpringBootTest(classes = FourWeekdaysApplication.class)
 class LocationServiceTest {
