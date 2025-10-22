@@ -5,6 +5,8 @@ import com.fourweekdays.fourweekdays.inbound.model.entity.Inbound;
 import com.fourweekdays.fourweekdays.inbound.model.entity.InboundProduct;
 import com.fourweekdays.fourweekdays.inbound.model.entity.InboundStatus;
 import com.fourweekdays.fourweekdays.inbound.repository.InboundRepository;
+import com.fourweekdays.fourweekdays.inventory.model.entity.Location;
+import com.fourweekdays.fourweekdays.inventory.repository.LocationRepository;
 import com.fourweekdays.fourweekdays.member.model.entity.AuthStatus;
 import com.fourweekdays.fourweekdays.member.model.entity.Member;
 import com.fourweekdays.fourweekdays.member.model.entity.MemberRole;
@@ -29,14 +31,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-/**
- * 초기 더미 데이터 생성
- *
- * 사용법:
- * 1. 이 파일을 그대로 두고 애플리케이션 실행
- * 2. 데이터가 생성되면 이 파일 삭제하거나 @Configuration 주석 처리
- * 3. 끝!
- */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -49,6 +43,7 @@ public class InitialDataSetup {
             ProductRepository productRepository,
             PurchaseOrderRepository purchaseOrderRepository,
             InboundRepository inboundRepository,
+            LocationRepository locationRepository,
             PasswordEncoder passwordEncoder) {
 
         return args -> {
@@ -59,6 +54,28 @@ public class InitialDataSetup {
             }
 
             log.info("========== 초기 데이터 생성 시작 ==========");
+            // ✅ 0. Location 생성
+            if (locationRepository.count() == 0) {
+                log.info("Location 초기 데이터 생성 중...");
+
+                for (char zone = 'A'; zone <= 'Z'; zone++) {
+                    for (int row = 1; row <= 5; row++) {
+                        for (int level = 1; level <= 5; level++) {
+                            String zoneStr = String.valueOf(zone);
+                            String rowStr = String.format("%02d", row);
+                            String levelStr = String.format("%02d", level);
+
+                            Location location = Location.create(zoneStr, rowStr, levelStr, null);
+                            locationRepository.save(location);
+                        }
+                    }
+                }
+
+                log.info("✓ Location 2,600개 생성 완료");
+            } else {
+                log.info("Location 데이터가 이미 존재합니다. 생성을 건너뜁니다.");
+            }
+
 
             // 1. 공급업체 (화장품 브랜드)
             Vendor vendor1 = vendorRepository.save(Vendor.builder()

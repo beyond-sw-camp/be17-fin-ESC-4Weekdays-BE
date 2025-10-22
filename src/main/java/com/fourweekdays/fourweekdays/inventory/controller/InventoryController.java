@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/inventories") // 복수형으로 작성
+@RequestMapping("/api/inventories")
 public class InventoryController {
 
     // 재고 목록 조회
