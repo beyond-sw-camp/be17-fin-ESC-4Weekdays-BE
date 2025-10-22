@@ -58,6 +58,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.h2database:h2'
 
     // aws 설정 추가
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.0.0'

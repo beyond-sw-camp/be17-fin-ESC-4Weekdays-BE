@@ -54,24 +54,17 @@ public class InitialDataSetup {
             }
 
             log.info("========== 초기 데이터 생성 시작 ==========");
-            // ✅ 0. Location 생성
             if (locationRepository.count() == 0) {
                 log.info("Location 초기 데이터 생성 중...");
 
-                for (char zone = 'A'; zone <= 'Z'; zone++) {
-                    for (int row = 1; row <= 5; row++) {
-                        for (int level = 1; level <= 5; level++) {
-                            String zoneStr = String.valueOf(zone);
-                            String rowStr = String.format("%02d", row);
-                            String levelStr = String.format("%02d", level);
-
-                            Location location = Location.create(zoneStr, rowStr, levelStr, null);
-                            locationRepository.save(location);
-                        }
-                    }
+                for (char zone = 1; zone <= 1000; zone++) {
+                    Location location = Location.builder()
+                            .zone(zone)
+                            .build();
+                    locationRepository.save(location);
                 }
 
-                log.info("✓ Location 2,600개 생성 완료");
+                log.info("✓ Location 생성 완료");
             } else {
                 log.info("Location 데이터가 이미 존재합니다. 생성을 건너뜁니다.");
             }

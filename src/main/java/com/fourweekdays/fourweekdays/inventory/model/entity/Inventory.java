@@ -1,10 +1,25 @@
 package com.fourweekdays.fourweekdays.inventory.model.entity;
 
 import com.fourweekdays.fourweekdays.common.BaseEntity;
-import com.fourweekdays.fourweekdays.member.model.entity.Member;
+import com.fourweekdays.fourweekdays.inventory.exception.InventoryException;
+import com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType;
 import com.fourweekdays.fourweekdays.product.model.entity.Product;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import static com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType.INVALID_INCREASE_QUANTITY;
+
+
+@Table(
+        name = "inventory",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"product_id", "location_id"})
+        }
+)
+@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Inventory extends BaseEntity {
 
@@ -14,16 +29,51 @@ public class Inventory extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private Product product; // 어떤 상품인지
-
-    private int quantity;  // 재고 수량
-    private String location; // 보관 위치 (선반, 랙 등 예: A12309 구역)
+    private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "member_id")
-    private Member member; // 적치 작업자가 누구인지
+    @JoinColumn(name = "location_id")
+    private Location location;
 
-// 입고/출고를 관계맺어 사용하게 된다면 Member를 지우고 입고/출고에 할당되어 있는 작업자를 조회
+    private long quantity;  // 재고 수량
+
+    @Builder
+    private Inventory(Product product, Location location, Long quantity) {
+        this.product = product;
+        this.location = location;
+        this.quantity = quantity;
+    }
+
+    // 정적 팩토리 메서드
+    public static Inventory create(Product product, Location location, long quantity) {
+        return Inventory.builder()
+                .product(product)
+                .location(location)
+                .quantity(quantity)
+                .build();
+    }
+
+    public void increase(long quantity) {
+        if (quantity < 0) {
+            throw new InventoryException(INVALID_INCREASE_QUANTITY);
+        }
+        this.quantity += quantity;
+    }
+
+    public void decrease(long quantity) {
+        if (quantity <= 0) {
+            throw new InventoryException(InventoryExceptionType.INVALID_DECREASE_QUANTITY);
+        }
+        if (this.quantity < quantity) {
+            throw new InventoryException(InventoryExceptionType.INSUFFICIENT_INVENTORY);
+        }
+        this.quantity -= quantity;
+    }
+
+    // 입고/출고를 관계맺어 사용하게 된다면 Member를 지우고 입고/출고에 할당되어 있는 작업자를 조회
+//    @ManyToOne
+//    @JoinColumn(name = "member_id")
+//    private Member member; // 적치 작업자가 누구인지
 
 //    @ManyToOne
 //    @JoinColumn(name = "inbound_id")

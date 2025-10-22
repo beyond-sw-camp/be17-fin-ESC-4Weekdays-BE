@@ -34,7 +34,7 @@ public class InboundProduct extends BaseEntity {
 
     @Column(length = 50, nullable = true)
     private String lotNumber; // 로트번호
-    private String locationCode; // 적재위치 (A-01-01) TODO: Location 엔티티 or VO 격상
+    private String locationCode;
 
 //    @Column
 //    private LocalDate expirationDate; // TODO: 이게 필요한가?
