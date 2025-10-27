@@ -81,6 +81,12 @@ public class InboundService {
         return inboundRepository.save(inbound).getId();
     }
 
+    @Transactional(readOnly = true)
+    public Page<InboundReadDto> inboundListByProduct(String productName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return inboundRepository.findByProductName(productName, pageable);
+    }
+
     public InboundReadDto findById(Long id) {
         Inbound inbound = inboundRepository.findById(id)
                 .orElseThrow(() -> new InboundException(INBOUND_NOT_FOUND));

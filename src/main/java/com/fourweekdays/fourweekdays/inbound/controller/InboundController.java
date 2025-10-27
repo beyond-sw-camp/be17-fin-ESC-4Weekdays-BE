@@ -46,6 +46,15 @@ public class InboundController {
         return ResponseEntity.ok(BaseResponse.success(inboundService.inboundList(page, size)));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<BaseResponse<Page<InboundReadDto>>> searchInboundsByProduct(
+            @RequestParam(required = false) String productName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<InboundReadDto> result = inboundService.inboundListByProduct(productName, page, size);
+        return ResponseEntity.ok(BaseResponse.success(result));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<BaseResponse<String>> updateInbound(@RequestBody InboundStatusUpdateRequest requestDto, @PathVariable Long id) {
         inboundService.updateInboundStatus(id, requestDto);
