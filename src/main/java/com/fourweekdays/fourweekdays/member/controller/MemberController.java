@@ -7,6 +7,7 @@ import com.fourweekdays.fourweekdays.member.model.dto.MemberResponseDto;
 import com.fourweekdays.fourweekdays.member.model.dto.MemberSignUpDto;
 import com.fourweekdays.fourweekdays.member.model.dto.MemberUpdateDto;
 import com.fourweekdays.fourweekdays.member.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class MemberController {
 
     // 회원 등록
     @PostMapping("/signup")
-    public ResponseEntity<BaseResponse<String>> register(@RequestBody MemberSignUpDto dto) {
+    public ResponseEntity<BaseResponse<String>> register(@Valid @RequestBody MemberSignUpDto dto) {
         memberService.register(dto);
         return ResponseEntity.ok(BaseResponse.success("등록 완료"));
     }
