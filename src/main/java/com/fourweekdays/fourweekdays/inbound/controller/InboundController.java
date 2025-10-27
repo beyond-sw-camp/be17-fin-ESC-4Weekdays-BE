@@ -52,6 +52,12 @@ public class InboundController {
         return ResponseEntity.ok(BaseResponse.success(requestDto.status().name()));
     }
 
+    @PatchMapping("/{id}/arrive")
+    public ResponseEntity<BaseResponse<String>> arriveDelivery(@PathVariable Long id) {
+        inboundService.arriveDelivery(id);
+        return ResponseEntity.ok(BaseResponse.success("차량 도착함"));
+    }
+
     @PatchMapping("/{id}/inspection")
     public ResponseEntity<BaseResponse<String>> updateInspection(@PathVariable Long id, @RequestBody List<InboundInspectionUpdateRequest> requestList) {
         inboundService.updateInspection(id, requestList);

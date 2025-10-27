@@ -19,6 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -60,9 +61,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             cookie.setPath("/");
             response.addCookie(cookie);
             response.setContentType("application/json; charset=UTF-8");
+
+            Map<String, Object> result = Map.of("role", authUser.getRole().name());
+
             response.getWriter().write(
                     new ObjectMapper().writeValueAsString(
-                            BaseResponse.success(MemberLoginResponseDto.from(authUser))
+                            BaseResponse.success(result)
                     )
             );
         }

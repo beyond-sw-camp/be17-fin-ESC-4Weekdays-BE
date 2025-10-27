@@ -56,13 +56,6 @@ public class Inbound extends BaseEntity {
 
 
     // ===== ===== //
-    public void updateStatus(InboundStatus nextStatus) {
-        if (!this.status.canTransitionTo(nextStatus)) {
-            throw new InboundException(INBOUND_STATUS_TRANSITION_NOT_ALLOWED);
-        }
-        this.status = nextStatus;
-    }
-
     public void updateData(String managerName, LocalDateTime scheduledDate, String description) {
         this.managerName = managerName;
         this.scheduledDate = scheduledDate;
@@ -82,5 +75,13 @@ public class Inbound extends BaseEntity {
         return products.stream()
                 .filter(product -> product.getId().equals(inboundProductId))
                 .findFirst();
+    }
+
+    // ===== 입고 상태 변경 메서드 ===== //
+    public void updateStatus(InboundStatus nextStatus) {
+        if (!this.status.canTransitionTo(nextStatus)) {
+            throw new InboundException(INBOUND_STATUS_TRANSITION_NOT_ALLOWED);
+        }
+        this.status = nextStatus;
     }
 }

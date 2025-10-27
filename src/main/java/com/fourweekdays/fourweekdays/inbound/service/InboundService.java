@@ -21,6 +21,7 @@ import com.fourweekdays.fourweekdays.product.repository.ProductRepository;
 import com.fourweekdays.fourweekdays.purchaseorder.exception.PurchaseOrderException;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
 import com.fourweekdays.fourweekdays.purchaseorder.repository.PurchaseOrderRepository;
+import com.fourweekdays.fourweekdays.tasks.factory.InboundTaskFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,13 +49,16 @@ public class InboundService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final ProductRepository productRepository;
     private final CodeGenerator codeGenerator;
+    private final InboundTaskFactory inboundTaskFactory;
 
     public Long createByPurchaseOrder(PurchaseOrder purchaseOrder) {
-        // -> 발주 트리거에 의해 트랜잭션 전파 Transactional 어노테이션 없음.
-        // TODO: member 연결하고 담당자 배정해야함.
-        // TODO: ASN 구현시 발주 승인 트리거가 아닌 ASN 수신 트리거에 의해 생성 로직이 실행되어야함.
-        // TODO: ASN 수신시 입고 예정일을 받아서 Inbound의 입고 예정일 상태를 변경해야함.
-        // TODO: 하나의 발주서로 여러 Inbound가 생성되지 않게 만드는 방어 로직 필요.
+        /**
+         * -> 발주 트리거에 의해 트랜잭션 전파 Transactional 어노테이션 없음.
+         * TODO: 1. member 연결하고 담당자 배정해야함.
+         * TODO: 2. ASN 구현시 발주 승인 트리거가 아닌 ASN 수신 트리거에 의해 생성 로직이 실행되어야함.
+         * TODO: 3. ASN 수신시 입고 예정일을 받아서 Inbound의 입고 예정일 상태를 변경해야함.
+         * TODO: 4. 하나의 발주서로 여러 Inbound가 생성되지 않게 만드는 방어 로직 필요.
+         */
 
         Member manager = memberRepository.findById(1L)
                 .orElseThrow(() -> new MemberException(MEMBER_NOT_FOUND));
@@ -119,7 +123,6 @@ public class InboundService {
         inbound.updateStatus(InboundStatus.PUTAWAY);
     }
 
-    // 소프트 딜리트
     @Transactional
     public void cancel(Long id) {
         Inbound inbound = inboundRepository.findById(id)
@@ -131,8 +134,17 @@ public class InboundService {
         inbound.cancelInbound();
     }
 
-    // TODO: 하드 딜리트 - 꼭 구현을 해야하나?
+    @Transactional
+    public void arriveDelivery(Long inboundId) {
+        Inbound inbound = inboundRepository.findById(inboundId)
+                .orElseThrow(() -> new InboundException(INBOUND_NOT_FOUND));
+        inbound.updateStatus(InboundStatus.ARRIVED);
 
+        PurchaseOrder purchaseOrder = inbound.getPurchaseOrder();
+        purchaseOrder.completeDelivery();
+
+        inboundTaskFactory.createInspectionTask(inboundId);
+    }
 
     // TODO: 삭제? 발주서가 없는 입고는 어떻게 처리할까
     @Transactional

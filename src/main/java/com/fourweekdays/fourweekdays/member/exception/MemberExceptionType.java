@@ -8,7 +8,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 public enum MemberExceptionType implements ExceptionType {
 
-    MEMBER_NOT_FOUND(NOT_FOUND, "해당 직원을 찾을 수 없습니다.");
+    MEMBER_NOT_FOUND(NOT_FOUND, "해당 직원을 찾을 수 없습니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

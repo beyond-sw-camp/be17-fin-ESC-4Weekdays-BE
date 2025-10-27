@@ -3,6 +3,7 @@ package com.fourweekdays.fourweekdays.config;
 import com.fourweekdays.fourweekdays.asn.filter.VendorApiKeyFilter;
 import com.fourweekdays.fourweekdays.member.config.filter.JwtAuthFilter;
 import com.fourweekdays.fourweekdays.member.config.filter.LoginFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,7 +58,16 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
-        http.logout(AbstractHttpConfigurer::disable);
+
+        http.logout(logout -> logout
+                .logoutUrl("/logout")
+                .deleteCookies("4weekdays")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"message\":\"로그아웃에 성공하였습니다.\"}");
+                })
+        );
 
         http.addFilterBefore(vendorApiKeyFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new JwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);

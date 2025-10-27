@@ -16,6 +16,12 @@ import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrderProduct;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrderStatus;
 import com.fourweekdays.fourweekdays.purchaseorder.repository.PurchaseOrderRepository;
+import com.fourweekdays.fourweekdays.tasks.model.entity.InspectionTask;
+import com.fourweekdays.fourweekdays.tasks.model.entity.Task;
+import com.fourweekdays.fourweekdays.tasks.model.entity.TaskCategory;
+import com.fourweekdays.fourweekdays.tasks.model.entity.TaskStatus;
+import com.fourweekdays.fourweekdays.tasks.repository.InspectionTaskRepository;
+import com.fourweekdays.fourweekdays.tasks.repository.TaskRepository;
 import com.fourweekdays.fourweekdays.vendor.model.entity.Vendor;
 import com.fourweekdays.fourweekdays.vendor.model.entity.VendorStatus;
 import com.fourweekdays.fourweekdays.vendor.repository.VendorRepository;
@@ -49,7 +55,10 @@ public class InitialDataSetup {
             ProductRepository productRepository,
             PurchaseOrderRepository purchaseOrderRepository,
             InboundRepository inboundRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            TaskRepository taskRepository,
+            InspectionTaskRepository inspectionTaskRepository
+    ) {
 
         return args -> {
             // 이미 데이터가 있으면 건너뛰기
@@ -745,6 +754,78 @@ public class InitialDataSetup {
                     .products(new ArrayList<>())
                     .build();
             inboundRepository.save(inbound4);
+
+            if (taskRepository.count() > 0) {
+                log.info("Task 데이터가 이미 존재합니다.");
+                return;
+            }
+
+            log.info("========== Task 초기 데이터 생성 시작 ==========");
+
+            // 검수 작업 1: 완료됨
+            Task task1 = Task.builder()
+                    .category(TaskCategory.INSPECTION)
+                    .status(TaskStatus.PENDING)
+                    .referenceId(inbound1.getId())
+                    .build();
+            task1.assignTo(worker1);
+            task1.start();
+            task1.complete("검수 완료. 전량 정상");
+            taskRepository.save(task1);
+
+            InspectionTask inspection1 = InspectionTask.builder()
+                    .task(task1)
+                    .inboundId(inbound1.getId())
+                    .build();
+            inspectionTaskRepository.save(inspection1);
+
+            // 검수 작업 2: 진행중
+            Task task2 = Task.builder()
+                    .category(TaskCategory.INSPECTION)
+                    .status(TaskStatus.PENDING)
+                    .referenceId(inbound2.getId())
+                    .build();
+            task2.assignTo(worker2);
+            task2.start();
+            taskRepository.save(task2);
+
+            InspectionTask inspection2 = InspectionTask.builder()
+                    .task(task2)
+                    .inboundId(inbound2.getId())
+                    .build();
+            inspectionTaskRepository.save(inspection2);
+
+            // 검수 작업 3: 할당됨
+            Task task3 = Task.builder()
+                    .category(TaskCategory.INSPECTION)
+                    .status(TaskStatus.PENDING)
+                    .referenceId(inbound3.getId())
+                    .build();
+            task3.assignTo(worker1);
+            taskRepository.save(task3);
+
+            InspectionTask inspection3 = InspectionTask.builder()
+                    .task(task3)
+                    .inboundId(inbound3.getId())
+                    .build();
+            inspectionTaskRepository.save(inspection3);
+
+            // 검수 작업 4: 대기중
+            Task task4 = Task.builder()
+                    .category(TaskCategory.INSPECTION)
+                    .status(TaskStatus.PENDING)
+                    .referenceId(inbound2.getId())
+                    .build();
+            taskRepository.save(task4);
+
+            InspectionTask inspection4 = InspectionTask.builder()
+                    .task(task4)
+                    .inboundId(inbound2.getId())
+                    .build();
+            inspectionTaskRepository.save(inspection4);
+
+            log.info("✓ 검수 작업 4건 생성 (완료 1, 진행중 1, 할당 1, 대기 1)");
+            log.info("========== Task 초기 데이터 생성 완료 ==========");
 
             log.info("✓ 입고 4건 생성");
             log.info("========== 초기 데이터 생성 완료 ==========");
