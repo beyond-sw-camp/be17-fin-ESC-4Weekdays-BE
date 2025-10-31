@@ -1,7 +1,6 @@
 package com.fourweekdays.fourweekdays.member.exception;
 
 import com.fourweekdays.fourweekdays.global.exception.ExceptionType;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;

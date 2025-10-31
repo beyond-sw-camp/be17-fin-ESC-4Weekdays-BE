@@ -1,8 +1,5 @@
 package com.fourweekdays.fourweekdays.purchaseorder.model.dto.request;
 
-import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
-import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrderStatus;
-import com.fourweekdays.fourweekdays.vendor.model.entity.Vendor;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

@@ -2,7 +2,6 @@ package com.fourweekdays.fourweekdays.product.model.dto.request;
 
 
 import com.fourweekdays.fourweekdays.product.model.entity.ProductStatus;
-import com.fourweekdays.fourweekdays.product.model.ProductStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

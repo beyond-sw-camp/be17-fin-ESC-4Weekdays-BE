@@ -1,7 +1,6 @@
 package com.fourweekdays.fourweekdays.inbound.repository;
 
 import com.fourweekdays.fourweekdays.inbound.model.entity.Inbound;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

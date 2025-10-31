@@ -6,7 +6,6 @@ import com.fourweekdays.fourweekdays.product.exception.ProductException;
 import com.fourweekdays.fourweekdays.product.exception.ProductExceptionType;
 import com.fourweekdays.fourweekdays.product.model.entity.Product;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

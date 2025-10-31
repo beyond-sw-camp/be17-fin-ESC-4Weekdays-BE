@@ -1,12 +1,13 @@
-package com.fourweekdays.fourweekdays.outbound.comtroller;
+package com.fourweekdays.fourweekdays.outbound.controller;
 
 import com.fourweekdays.fourweekdays.common.BaseResponse;
 import com.fourweekdays.fourweekdays.common.BaseResponseStatus;
 import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundCreateDto;
 import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundInspectionRequest;
 import com.fourweekdays.fourweekdays.outbound.model.dto.response.OutboundReadDto;
-import com.fourweekdays.fourweekdays.outbound.model.dto.response.OutboundStatusResponse;
 import com.fourweekdays.fourweekdays.outbound.service.OutboundService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

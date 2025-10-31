@@ -6,8 +6,6 @@ import com.fourweekdays.fourweekdays.vendor.model.entity.VendorStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
 
 @Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder @AllArgsConstructor

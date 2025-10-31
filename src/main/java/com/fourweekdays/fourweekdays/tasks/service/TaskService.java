@@ -32,7 +32,6 @@ import java.util.List;
 import static com.fourweekdays.fourweekdays.inbound.exception.InboundExceptionType.INBOUND_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.member.exception.MemberExceptionType.MEMBER_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.tasks.exception.TaskExceptionType.*;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor

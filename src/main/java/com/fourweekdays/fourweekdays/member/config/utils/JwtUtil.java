@@ -1,6 +1,5 @@
 package com.fourweekdays.fourweekdays.member.config.utils;
 
-import com.fourweekdays.fourweekdays.member.model.entity.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

@@ -4,7 +4,6 @@ import com.fourweekdays.fourweekdays.asn.resolver.VendorArgumentResolver;
 import com.fourweekdays.fourweekdays.order.resolver.FranchiseArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 

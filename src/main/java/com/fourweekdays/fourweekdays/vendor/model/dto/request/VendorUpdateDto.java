@@ -1,7 +1,6 @@
 package com.fourweekdays.fourweekdays.vendor.model.dto.request;
 
 import com.fourweekdays.fourweekdays.common.vo.Address;
-import com.fourweekdays.fourweekdays.vendor.model.entity.Vendor;
 import com.fourweekdays.fourweekdays.vendor.model.entity.VendorStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

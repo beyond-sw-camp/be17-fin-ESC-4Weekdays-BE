@@ -1,7 +1,6 @@
 package com.fourweekdays.fourweekdays.tasks.controller;
 
 import com.fourweekdays.fourweekdays.common.BaseResponse;
-import com.fourweekdays.fourweekdays.member.model.dto.MemberResponseDto;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskAssignRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskCompleteRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.response.TaskDetailResponse;

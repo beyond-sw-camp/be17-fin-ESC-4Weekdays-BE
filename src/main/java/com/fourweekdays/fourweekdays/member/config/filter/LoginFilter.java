@@ -5,7 +5,6 @@ import com.fourweekdays.fourweekdays.common.BaseResponse;
 import com.fourweekdays.fourweekdays.member.config.utils.JwtUtil;
 import com.fourweekdays.fourweekdays.member.model.UserAuth;
 import com.fourweekdays.fourweekdays.member.model.dto.MemberLoginDto;
-import com.fourweekdays.fourweekdays.member.model.dto.MemberLoginResponseDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

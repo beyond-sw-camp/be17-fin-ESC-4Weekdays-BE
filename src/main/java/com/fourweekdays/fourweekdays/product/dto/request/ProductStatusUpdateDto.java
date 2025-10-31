@@ -1,6 +1,6 @@
 package com.fourweekdays.fourweekdays.product.dto.request;
 
-import com.fourweekdays.fourweekdays.product.model.ProductStatus;
+import com.fourweekdays.fourweekdays.product.model.entity.ProductStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 

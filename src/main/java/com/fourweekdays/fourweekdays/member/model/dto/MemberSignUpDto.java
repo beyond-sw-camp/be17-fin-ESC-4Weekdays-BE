@@ -3,15 +3,15 @@ package com.fourweekdays.fourweekdays.member.model.dto;
 import com.fourweekdays.fourweekdays.member.model.entity.AuthStatus;
 import com.fourweekdays.fourweekdays.member.model.entity.Member;
 import com.fourweekdays.fourweekdays.member.model.entity.MemberRole;
-import com.fourweekdays.fourweekdays.product.model.Product;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter

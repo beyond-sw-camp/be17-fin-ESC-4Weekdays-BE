@@ -1,6 +1,5 @@
 package com.fourweekdays.fourweekdays.tasks.repository;
 
-import com.fourweekdays.fourweekdays.member.repository.MemberRepositoryCustom;
 import com.fourweekdays.fourweekdays.tasks.model.entity.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 

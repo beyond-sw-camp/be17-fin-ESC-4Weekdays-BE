@@ -7,7 +7,6 @@ import com.querydsl.core.BooleanBuilder;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class MemberPredicateBuilder {
 

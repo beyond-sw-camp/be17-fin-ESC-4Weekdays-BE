@@ -1,19 +1,14 @@
 package com.fourweekdays.fourweekdays.outbound.model.dto.request;
 
-import com.fourweekdays.fourweekdays.inbound.model.dto.request.InboundProductDto;
 import com.fourweekdays.fourweekdays.member.model.entity.Member;
 import com.fourweekdays.fourweekdays.order.model.entity.Order;
 import com.fourweekdays.fourweekdays.outbound.model.entity.Outbound;
 import com.fourweekdays.fourweekdays.outbound.model.entity.OutboundStatus;
-import com.fourweekdays.fourweekdays.outbound.model.entity.OutboundType;
 import lombok.Builder;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Builder

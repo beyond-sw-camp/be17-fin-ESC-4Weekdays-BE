@@ -1,5 +1,6 @@
 package com.fourweekdays.fourweekdays.inventory.model.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
