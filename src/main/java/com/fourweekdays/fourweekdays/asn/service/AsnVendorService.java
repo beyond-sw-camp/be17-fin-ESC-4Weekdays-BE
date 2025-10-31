@@ -5,6 +5,7 @@ import com.fourweekdays.fourweekdays.asn.model.dto.request.AsnReceiveRequest;
 import com.fourweekdays.fourweekdays.asn.model.dto.request.PurchaseOrderRejectRequest;
 import com.fourweekdays.fourweekdays.asn.model.dto.response.AsnReceiveResponse;
 import com.fourweekdays.fourweekdays.asn.model.entity.Asn;
+import com.fourweekdays.fourweekdays.asn.model.entity.AsnStatus;
 import com.fourweekdays.fourweekdays.asn.repository.AsnRepository;
 import com.fourweekdays.fourweekdays.common.generator.CodeGenerator;
 import com.fourweekdays.fourweekdays.inbound.service.InboundService;
@@ -50,7 +51,8 @@ public class AsnVendorService {
                 purchaseOrder,
                 codeGenerator.generate(ASN_CODE_PREFIX),
                 request.expectedDate(),
-                request.description()
+                request.description(),
+                AsnStatus.ACCEPTED
         );
         asnRepository.save(asn);
 
@@ -73,6 +75,17 @@ public class AsnVendorService {
         }
 
         purchaseOrder.rejectByVendor(request.description());
+
+        // reject된 발주건 테이블 저장
+        Asn rejectedAsn = Asn.create(
+                vendor,
+                purchaseOrder,
+                codeGenerator.generate(ASN_CODE_PREFIX),
+                null,
+                request.description(),
+                AsnStatus.REJECTED
+        );
+        asnRepository.save(rejectedAsn);
     }
 
 

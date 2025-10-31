@@ -33,15 +33,18 @@ public class Asn extends BaseEntity {
 
     private String description; // 비고
 
+    @Enumerated(EnumType.STRING)
+    private AsnStatus status;
 
     public static Asn create(Vendor vendor, PurchaseOrder purchaseOrder,
-                             String asnCode, LocalDateTime expectedDate, String description) {
+                             String asnCode, LocalDateTime expectedDate, String description, AsnStatus status) {
         Asn asn = new Asn();
         asn.vendor = vendor;
         asn.purchaseOrder = purchaseOrder;
         asn.asnCode = asnCode;
         asn.expectedDate = expectedDate;
         asn.description = description;
+        asn.status = status;
         return asn;
     }
 

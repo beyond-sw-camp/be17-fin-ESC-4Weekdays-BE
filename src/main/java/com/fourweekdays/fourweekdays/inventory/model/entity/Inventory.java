@@ -74,4 +74,12 @@ public class Inventory extends BaseEntity {
         this.quantity -= amount;
         this.location.decreaseUsedCapacity(amount);
     }
+
+    public void decrease(int deducted) {
+        if (deducted < 0) {
+            throw new InventoryException(INVALID_QUANTITY);
+        }
+        this.quantity -= deducted;
+    }
+
 }

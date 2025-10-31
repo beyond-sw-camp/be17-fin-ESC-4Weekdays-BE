@@ -1,6 +1,11 @@
 package com.fourweekdays.fourweekdays.outbound.service;
 
 import com.fourweekdays.fourweekdays.common.generator.CodeGenerator;
+import com.fourweekdays.fourweekdays.inventory.exception.InventoryException;
+import com.fourweekdays.fourweekdays.inventory.model.entity.Inventory;
+import com.fourweekdays.fourweekdays.inventory.repository.InventoryRepository;
+import com.fourweekdays.fourweekdays.location.model.entity.Location;
+import com.fourweekdays.fourweekdays.location.repository.LocationRepository;
 import com.fourweekdays.fourweekdays.member.exception.MemberException;
 import com.fourweekdays.fourweekdays.member.repository.MemberRepository;
 import com.fourweekdays.fourweekdays.order.exception.OrderException;
@@ -11,16 +16,20 @@ import com.fourweekdays.fourweekdays.outbound.exception.OutboundException;
 import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundCreateDto;
 import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundInspectionRequest;
 import com.fourweekdays.fourweekdays.outbound.model.dto.response.OutboundReadDto;
-import com.fourweekdays.fourweekdays.outbound.model.entity.Outbound;
-import com.fourweekdays.fourweekdays.outbound.model.entity.OutboundProductItem;
-import com.fourweekdays.fourweekdays.outbound.model.entity.OutboundStatus;
+import com.fourweekdays.fourweekdays.outbound.model.entity.*;
+import com.fourweekdays.fourweekdays.outbound.repository.OutboundInventoryHistoryRepository;
 import com.fourweekdays.fourweekdays.outbound.repository.OutboundRepository;
+import com.fourweekdays.fourweekdays.tasks.factory.OutboundTaskFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import static com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType.INSUFFICIENT_INVENTORY;
 import static com.fourweekdays.fourweekdays.member.exception.MemberExceptionType.MEMBER_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.order.exception.OrderExceptionType.ORDER_CANNOT_APPROVED;
 import static com.fourweekdays.fourweekdays.order.exception.OrderExceptionType.ORDER_NOT_FOUND;
@@ -37,9 +46,41 @@ public class OutboundService {
     private final OutboundRepository outboundRepository;
     private final CodeGenerator codeGenerator;
     private final OrderRepository orderRepository;
+    private final OutboundTaskFactory otfTaskFactory;
+    private final LocationRepository locationRepository;
+    private final InventoryRepository inventoryRepository;
+    private final OutboundInventoryHistoryRepository outboundHistoryRepository;
+
+    // 재고 감소 또는 제거
+    @Transactional
+    public void destroyOrDecreaseFromOutbound(Long outboundId) {
+        Outbound outbound = chekOutbound(outboundId);
+
+        List<Long> vendorIds = outbound.getItems().stream()
+                .map(i -> i.getProduct().getVendor().getId())
+                .distinct()
+                .toList();
+
+        // TODO vendor이 정해지지 않은 구역도 받게
+        List<Location> locations = locationRepository.findAllByVendorIds(vendorIds);
+
+        Map<Long, Location> locationMap = locations.stream()
+                .collect(Collectors.toMap(Location::getVendorId, l -> l));
+
+        List<OutboundInventoryHistory> allHistories = new ArrayList<>();
+
+        for (OutboundProductItem item : outbound.getItems()) {
+            Long vendorId = item.getProduct().getVendor().getId();
+            Location location = locationMap.get(vendorId);
+            List<OutboundInventoryHistory> outboundHistoryList =
+                    destroyOrDecreaseInventory(item.getProduct().getId(), item.getOrderedQuantity(), location.getId(), outbound);
+            allHistories.addAll(outboundHistoryList);
+        }
+        outboundHistoryRepository.saveAll(allHistories);
+    }
 
     // 출고 생성
-    // 주문과 완전 동일하게 생성되는 시나리오로 진행하겠음
+// 주문과 완전 동일하게 생성되는 시나리오로 진행하겠음
     @Transactional
     public Long createOutbound(OutboundCreateDto dto) {
 
@@ -62,8 +103,9 @@ public class OutboundService {
     public void approveOutbound(Long id) {
         Outbound outbound = chekOutbound(id);
         outbound.updateStatus(OutboundStatus.APPROVED);
-        // TODO 재고 차감
-        // TODO 출고 작업 생성
+
+        // 출고 작업 생성
+        otfTaskFactory.createPickingTask(id);
     }
 
     // 출고 거절
@@ -76,6 +118,7 @@ public class OutboundService {
         }
         outbound.updateStatus(OutboundStatus.CANCELLED);
         // TODO 재고 차감되었던만큼 증가
+
     }
 
     // TODO task가 작업 착수 -> 피킹중
@@ -173,4 +216,38 @@ public class OutboundService {
                 .orElseThrow(() -> new OutboundException(OUTBOUND_NOT_FOUND));
     }
 
+    private List<OutboundInventoryHistory> destroyOrDecreaseInventory(Long productId, Integer orderedQuantity, Long locationId, Outbound outbound) {
+        List<Inventory> inventories =
+                inventoryRepository.findByProductIdAndLocationIdOrderByLotNumberAscForUpdate(productId, locationId);
+
+        int remaining = orderedQuantity;
+        List<OutboundInventoryHistory> histories = new ArrayList<>();
+
+        for (Inventory inventory : inventories) {
+            if (remaining <= 0) break;
+
+            Integer currentQty = inventory.getQuantity();
+            int deducted = Math.min(currentQty, remaining);
+
+            inventory.decrease(deducted);
+            OutboundInventoryHistory history = OutboundInventoryHistory.builder()
+                    .outbound(outbound)
+                    .inventory(inventory)
+                    .lotNumber(inventory.getLotNumber())
+                    .quantityChanged(-deducted)
+                    .status(OutboundInventoryHistoryStatus.ACTIVE)
+                    .build();
+
+            histories.add(history);
+            remaining -= deducted;
+        }
+
+        if (remaining > 0) {
+            throw new InventoryException(INSUFFICIENT_INVENTORY);
+        }
+
+        inventoryRepository.saveAll(inventories);
+
+        return histories;
+    }
 }

@@ -1,12 +1,15 @@
 package com.fourweekdays.fourweekdays.tasks.controller;
 
 import com.fourweekdays.fourweekdays.common.BaseResponse;
+import com.fourweekdays.fourweekdays.member.model.dto.MemberResponseDto;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskAssignRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskCompleteRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.response.TaskDetailResponse;
+import com.fourweekdays.fourweekdays.tasks.model.dto.response.TaskListResponse;
 import com.fourweekdays.fourweekdays.tasks.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,5 +51,12 @@ public class TaskController {
     public ResponseEntity<BaseResponse<TaskDetailResponse>> getTaskDetail(@PathVariable Long taskId) {
         TaskDetailResponse response = taskService.getTaskDetail(taskId);
         return ResponseEntity.ok(BaseResponse.success(response));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<BaseResponse<Page<TaskListResponse>>> memberReads(@RequestParam(defaultValue = "0") Integer page,
+                                                                            @RequestParam(defaultValue = "10") Integer size) {
+        Page<TaskListResponse> result = taskService.readAll(page, size);
+        return ResponseEntity.ok(BaseResponse.success(result));
     }
 }

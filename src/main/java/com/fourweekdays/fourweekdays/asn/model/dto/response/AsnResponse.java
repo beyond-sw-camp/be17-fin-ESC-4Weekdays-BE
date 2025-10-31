@@ -4,15 +4,18 @@ import com.fourweekdays.fourweekdays.asn.model.entity.Asn;
 import com.fourweekdays.fourweekdays.purchaseorder.model.dto.response.PurchaseOrderProductResponseDto;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
 @Builder
 public class AsnResponse {
 
     private Long id;
     private String asnCode;
+    private String purchaseOrderCode;
     private String vendorName;
     private LocalDateTime expectedDate;
     private String description; // 비고
@@ -25,6 +28,7 @@ public class AsnResponse {
         return AsnResponse.builder()
                 .id(asn.getId())
                 .asnCode(asn.getAsnCode())
+                .purchaseOrderCode(purchaseOrder.getOrderCode())
                 .vendorName(asn.getVendor().getName())
                 .expectedDate(asn.getExpectedDate())
                 .description(asn.getDescription())

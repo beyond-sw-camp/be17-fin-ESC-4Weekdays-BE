@@ -3,6 +3,7 @@ package com.fourweekdays.fourweekdays.inbound.model.entity;
 import com.fourweekdays.fourweekdays.common.BaseEntity;
 import com.fourweekdays.fourweekdays.inbound.exception.InboundException;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
+import com.fourweekdays.fourweekdays.tasks.model.entity.Task;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -27,4 +27,17 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long>, Inv
 
     @Query("SELECT i FROM Inventory i WHERE i.location.id = :locationId AND i.quantity > 0")
     List<Inventory> findByLocationId(@Param("locationId") Long locationId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT i FROM Inventory i
+            WHERE i.product.id = :productId
+            AND i.location.id = :locationId
+            ORDER BY i.lotNumber ASC
+            """)
+    List<Inventory> findByProductIdAndLocationIdOrderByLotNumberAscForUpdate(
+            @Param("productId") Long productId,
+            @Param("locationId") Long locationId
+    );
+
 }

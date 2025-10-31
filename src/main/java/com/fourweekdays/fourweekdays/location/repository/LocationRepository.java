@@ -27,4 +27,8 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             "ORDER BY l.usedCapacity ASC")
     List<Location> findAvailableLocationsByVendor(@Param("vendorId") Long vendorId, @Param("minCapacity") int minCapacity);
 
+    // LocationRepository
+    @Query("SELECT l FROM Location l WHERE l.vendorId IN :vendorIds")
+    List<Location> findAllByVendorIds(@Param("vendorIds") List<Long> vendorIds);
+
 }

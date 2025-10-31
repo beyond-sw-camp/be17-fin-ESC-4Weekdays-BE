@@ -1,10 +1,13 @@
 package com.fourweekdays.fourweekdays.member.model.entity;
 
 import com.fourweekdays.fourweekdays.common.BaseEntity;
+import com.fourweekdays.fourweekdays.product.model.entity.Product;
+import com.fourweekdays.fourweekdays.tasks.model.entity.Task;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -28,6 +31,9 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private AuthStatus status; // 계정 상태 (ACTIVE=활성, INACTIVE=비활성, LOCK=잠금)
+
+    @OneToMany(mappedBy = "worker", fetch = FetchType.LAZY) //
+    private List<Task> taskList;
 
     // ===== 로직 ===== //
     public void update(String name, String phoneNumber, String password,

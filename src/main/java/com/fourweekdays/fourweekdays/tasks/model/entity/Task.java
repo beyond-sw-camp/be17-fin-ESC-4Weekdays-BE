@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 
 import static com.fourweekdays.fourweekdays.tasks.exception.TaskExceptionType.*;
 
-@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Task extends BaseEntity {
 
@@ -22,7 +23,7 @@ public class Task extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaskCategory category; // INBOUND, OUTBOUND, RELOCATION
+    private TaskCategory category;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

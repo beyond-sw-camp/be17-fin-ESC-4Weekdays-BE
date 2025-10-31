@@ -1,7 +1,9 @@
 package com.fourweekdays.fourweekdays.tasks.service;
 
 import com.fourweekdays.fourweekdays.inbound.exception.InboundException;
+import com.fourweekdays.fourweekdays.inbound.exception.InboundExceptionType;
 import com.fourweekdays.fourweekdays.inbound.model.entity.Inbound;
+import com.fourweekdays.fourweekdays.inbound.model.entity.InboundProduct;
 import com.fourweekdays.fourweekdays.inbound.repository.InboundRepository;
 import com.fourweekdays.fourweekdays.member.exception.MemberException;
 import com.fourweekdays.fourweekdays.member.model.entity.Member;
@@ -10,19 +12,27 @@ import com.fourweekdays.fourweekdays.tasks.exception.TaskException;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskAssignRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskCompleteRequest;
 import com.fourweekdays.fourweekdays.tasks.model.dto.response.TaskDetailResponse;
+import com.fourweekdays.fourweekdays.tasks.model.dto.response.TaskListResponse;
 import com.fourweekdays.fourweekdays.tasks.model.entity.InspectionTask;
 import com.fourweekdays.fourweekdays.tasks.model.entity.PutawayTask;
 import com.fourweekdays.fourweekdays.tasks.model.entity.Task;
+import com.fourweekdays.fourweekdays.tasks.model.entity.TaskCategory;
 import com.fourweekdays.fourweekdays.tasks.repository.InspectionTaskRepository;
 import com.fourweekdays.fourweekdays.tasks.repository.PutawayTaskRepository;
 import com.fourweekdays.fourweekdays.tasks.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.fourweekdays.fourweekdays.inbound.exception.InboundExceptionType.INBOUND_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.member.exception.MemberExceptionType.MEMBER_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.tasks.exception.TaskExceptionType.*;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -102,5 +112,33 @@ public class TaskService {
                 .orElseThrow(() -> new InboundException(INBOUND_NOT_FOUND));
 
         return TaskDetailResponse.ofPutaway(task, putawayTask, inbound);
+    }
+
+    //TODO : 지금 서비스단에서 조회하고 하는데 나중에 TaskRepositoryCustomImpl 여기서 fetch join으로 조회하게 수정.
+    public Page<TaskListResponse> readAll(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Task> tasks = taskRepository.findAllWithPaging(pageable);
+
+        return tasks.map(task -> {
+            String inboundSummary = null;
+
+            if (task.getCategory() == TaskCategory.INSPECTION || task.getCategory() == TaskCategory.PUTAWAY) {
+                inboundSummary = inboundRepository.findById(task.getReferenceId())
+                        .map(inbound -> {
+                            String vendorName = inbound.getPurchaseOrder().getVendor().getName();
+                            List<InboundProduct> products = inbound.getProducts();
+
+                            if (products.isEmpty()) return vendorName;
+
+                            String firstProductName = products.get(0).getProduct().getName();
+                            return (products.size() > 1)
+                                    ? String.format("%s — %s 외 %d건", vendorName, firstProductName, products.size() - 1)
+                                    : String.format("%s — %s", vendorName, firstProductName);
+                        })
+                        .orElseThrow(() -> new InboundException(InboundExceptionType.INBOUND_NOT_FOUND));
+            }
+
+            return TaskListResponse.from(task, inboundSummary);
+        });
     }
 }
