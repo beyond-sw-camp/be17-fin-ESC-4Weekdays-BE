@@ -14,9 +14,9 @@ public class OutboundReadDto {
 
     public OutboundReadDto(Outbound outbound){
         this.id = outbound.getId();
-        this.vendorName = outbound.getVendor().getName();
-        this.productName = outbound.getProduct().getName();
-        this.quantity = outbound.getQuantity();
+//        this.vendorName = outbound.getVendor().getName();
+//        this.productName = outbound.getProduct().getName();
+//        this.quantity = outbound.getQuantity();
         this.outboundType = outbound.getOutboundType().toString();
         this.status = outbound.getStatus().name();
     }

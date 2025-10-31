@@ -1,13 +1,55 @@
 package com.fourweekdays.fourweekdays.inventory.model.dto.response;
 
-import com.fourweekdays.fourweekdays.product.model.Product;
-import lombok.*;
+import com.fourweekdays.fourweekdays.inventory.model.entity.Inventory;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Getter
-public class InventoryReadDto { // 상세 조회
-    private String inventoryId;
-    private Product product; // 상품 코드, 상품명, 재고 단위, 단가
-    private String location;
-    private int quantity;
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class InventoryReadDto {
 
+    private Long id;
+
+    private Long productId;
+    private String productName;
+
+    private Long locationId;
+    private String locationCode;
+
+    private Long inboundId;
+    private String lotNumber;
+    private Integer quantity;
+
+    private String description;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public static InventoryReadDto from(Inventory inventory) {
+        return InventoryReadDto.builder()
+                .id(inventory.getId())
+
+                .productId(inventory.getProduct().getId())
+                .productName(inventory.getProduct().getName())
+
+                .locationId(inventory.getLocation().getId())
+                .locationCode(inventory.getLocation().getLocationCode())
+
+                .lotNumber(inventory.getLotNumber())
+                .quantity(inventory.getQuantity())
+
+                .description(inventory.getDescription())
+
+                .createdAt(inventory.getCreatedAt())
+                .updatedAt(inventory.getUpdatedAt())
+
+                .build();
+    }
 }
+

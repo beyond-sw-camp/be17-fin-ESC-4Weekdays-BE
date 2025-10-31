@@ -54,11 +54,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                     String email = JwtUtil.getValue(claims, JwtUtil.EMAIL_NAME);
                     Long id = Long.parseLong(JwtUtil.getValue(claims, JwtUtil.IDX_NAME));
+                    String name = JwtUtil.getValue(claims, JwtUtil.NAME_NAME);
                     String role = JwtUtil.getValue(claims, JwtUtil.ROLE_NAME);
 
                     UserAuth authUser = UserAuth.builder()
                             .id(id)
                             .email(email)
+                            .name(name)
                             .build();
 
                     // Authentication 객체 생성

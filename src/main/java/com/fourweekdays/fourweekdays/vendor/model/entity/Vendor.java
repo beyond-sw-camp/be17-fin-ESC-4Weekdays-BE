@@ -1,20 +1,22 @@
 package com.fourweekdays.fourweekdays.vendor.model.entity;
 
-import com.fourweekdays.fourweekdays.common.vo.Address;
 import com.fourweekdays.fourweekdays.common.BaseEntity;
-import com.fourweekdays.fourweekdays.outbound.model.entity.Outbound;
-import com.fourweekdays.fourweekdays.product.model.Product;
+import com.fourweekdays.fourweekdays.common.vo.Address;
+import com.fourweekdays.fourweekdays.product.model.entity.Product;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-@Entity
+
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@Entity
 public class Vendor extends BaseEntity {
 
     @Id
@@ -22,7 +24,7 @@ public class Vendor extends BaseEntity {
     @Column(name = "vendor_id")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(unique = true, length = 50, nullable = false)
     private String vendorCode; // 공급업체 코드 (V-001, V-002 등)
 
     @Column(nullable = false, length = 200)
@@ -34,6 +36,9 @@ public class Vendor extends BaseEntity {
     @Column(length = 100)
     private String email;
 
+    @Column(unique = true)
+    private String apiKey;
+
     private String description; // 업체 설명 및 비고
 
     @Enumerated(EnumType.STRING)
@@ -44,27 +49,44 @@ public class Vendor extends BaseEntity {
     private Address address;
 
     @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY) // TODO: think CASCADE
-    private List<Product> productList = new ArrayList<>();
+    private List<Product> productList;
 
-    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY)
-    private List<Outbound> outboundList = new ArrayList<>();
-
-//    @Column(length = 200)
-//    private String employee; // 담당자
-
-    // ===== 비즈니스 로직 ===== //
-    public void update(String name, String phoneNumber, String email,
-                       String description, VendorStatus status, Address address) {
+    @Builder
+    public Vendor(String vendorCode, String name, String phoneNumber, String email, String apiKey, String description, VendorStatus status, Address address) {
+        this.vendorCode = vendorCode;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.description = description;
         this.status = status;
         this.address = address;
+        this.productList = new ArrayList<>();
+        this.apiKey = generateApiKey();
     }
 
-    public boolean canOrder() {
-        return this.status == VendorStatus.ACTIVE;
+    // ===== 비즈니스 로직 ===== //
+    public void update(String name, String phoneNumber, String email,
+                       String description, Address address) {
+        if (name != null) this.name = name;
+        if (phoneNumber != null) this.phoneNumber = phoneNumber;
+        if (email != null) this.email = email;
+        if (description != null) this.description = description;
+        if (address != null) this.address = address;
     }
 
+    public void changeStatus(VendorStatus status) {
+        if (status != null) this.status = status;
+    }
+
+//    public void suspended() {
+//        this.status = VendorStatus.SUSPENDED;
+//    }
+//
+//    public boolean canOrder() {
+//        return this.status == VendorStatus.ACTIVE;
+//    }
+
+    private String generateApiKey() {
+        return UUID.randomUUID().toString();
+    }
 }

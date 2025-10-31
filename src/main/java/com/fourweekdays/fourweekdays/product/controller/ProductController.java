@@ -1,15 +1,15 @@
 package com.fourweekdays.fourweekdays.product.controller;
 
 import com.fourweekdays.fourweekdays.common.BaseResponse;
-import com.fourweekdays.fourweekdays.common.BaseResponseStatus;
-import com.fourweekdays.fourweekdays.product.dto.request.ProductCreateDto;
-import com.fourweekdays.fourweekdays.product.dto.request.ProductUpdateDto;
-import com.fourweekdays.fourweekdays.product.dto.response.ProductReadDto;
+import com.fourweekdays.fourweekdays.product.model.dto.request.ProductCreateDto;
+import com.fourweekdays.fourweekdays.product.model.dto.request.ProductUpdateDto;
+import com.fourweekdays.fourweekdays.product.model.dto.response.ProductReadDto;
 import com.fourweekdays.fourweekdays.product.service.ProductService;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +18,7 @@ import java.util.List;
 @Tag(name = "상품 기능")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductService productService;
@@ -29,7 +29,7 @@ public class ProductController {
             description = "등록한 상품의 정보를 저장한다."
     )
     @PostMapping
-    public ResponseEntity<BaseResponse<Long>> register(@RequestBody ProductCreateDto dto) {
+    public ResponseEntity<BaseResponse<Long>> register(@Valid @RequestBody ProductCreateDto dto) {
         Long saveId = productService.createProduct(dto);
         return ResponseEntity.ok(BaseResponse.success(saveId));
     }
@@ -40,8 +40,9 @@ public class ProductController {
             description = "등록된 상품 목록을 조회한다."
     )
     @GetMapping
-    public ResponseEntity<BaseResponse<List<ProductReadDto>>> getProductList() {
-        List<ProductReadDto> productList = productService.getProductList();
+    public ResponseEntity<BaseResponse<Page<ProductReadDto>>> getProductList(@RequestParam(defaultValue = "0") int page,
+                                                                             @RequestParam(defaultValue = "10") int size) {
+        Page<ProductReadDto> productList = productService.getProductList(page, size);
         return ResponseEntity.ok(BaseResponse.success(productList));
     }
 
@@ -52,12 +53,7 @@ public class ProductController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse<ProductReadDto>> getProductDetails(@PathVariable Long id) {
-        ProductReadDto productDto = productService.getProductDetails(id);
-        if (productDto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(BaseResponse.error(BaseResponseStatus.PRODUCT_NOT_FOUND));
-        }
-        return ResponseEntity.ok(BaseResponse.success(productDto));
+        return ResponseEntity.ok(BaseResponse.success(productService.getProductDetail(id)));
     }
 
     @Operation(
@@ -68,6 +64,12 @@ public class ProductController {
     public ResponseEntity<BaseResponse<Long>> updateProduct(@PathVariable Long id,
                                                             @RequestBody ProductUpdateDto requestDto) {
         return ResponseEntity.ok(BaseResponse.success(productService.update(id, requestDto)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<BaseResponse<String>> deleteProduct(@PathVariable Long id) {
+        productService.delete(id);
+        return ResponseEntity.ok(BaseResponse.success("품절 상태로 변경"));
     }
 
 

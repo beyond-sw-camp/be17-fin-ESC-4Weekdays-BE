@@ -1,13 +1,12 @@
-package com.fourweekdays.fourweekdays.outbound.controller;
+package com.fourweekdays.fourweekdays.outbound.comtroller;
 
 import com.fourweekdays.fourweekdays.common.BaseResponse;
 import com.fourweekdays.fourweekdays.common.BaseResponseStatus;
 import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundCreateDto;
+import com.fourweekdays.fourweekdays.outbound.model.dto.request.OutboundInspectionRequest;
 import com.fourweekdays.fourweekdays.outbound.model.dto.response.OutboundReadDto;
 import com.fourweekdays.fourweekdays.outbound.model.dto.response.OutboundStatusResponse;
 import com.fourweekdays.fourweekdays.outbound.service.OutboundService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,30 +31,6 @@ public class OutboundController {
     public ResponseEntity<BaseResponse<Long>> require(@RequestBody OutboundCreateDto dto) {
         Long saveId = outboundService.createOutbound(dto);
         return ResponseEntity.ok(BaseResponse.success(saveId));
-    }
-
-    // 출고 승인
-    @Operation(
-            summary = "출고 승인",
-            description = "출고 요청 상태가 '승인 대기(PENDING)'인 출고서를 승인 처리한다. <br>" +
-                    "승인 후 상태는 APPROVED로 변경된다."
-    )
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<BaseResponse<OutboundStatusResponse>> approveOutbound(@PathVariable Long id) {
-        OutboundStatusResponse result = outboundService.approveOutbound(id);
-        return ResponseEntity.ok(BaseResponse.success(result));
-    }
-
-    // 출고 거절
-    @Operation(
-            summary = "출고 거절",
-            description = "출고 요청 상태가 '승인 대기(PENDING)'인 출고서를 거절 처리한다. <br>" +
-                    "거절 후 상태는 REJECTED로 변경된다."
-    )
-    @PostMapping("/{id}/reject")
-    public ResponseEntity<BaseResponse<OutboundStatusResponse>> rejectOutbound(@PathVariable Long id) {
-        OutboundStatusResponse result = outboundService.rejectOutbound(id);
-        return ResponseEntity.ok(BaseResponse.success(result));
     }
 
     // 출고서 전체 조회
@@ -84,5 +59,36 @@ public class OutboundController {
                     .body(BaseResponse.error(BaseResponseStatus.OUTBOUND_NOT_FOUND));
         }
         return ResponseEntity.ok(BaseResponse.success(outboundDto));
+    }
+
+    // 출고 승인
+    @Operation(
+            summary = "출고 승인",
+            description = "출고 요청 상태가 '승인 대기(PENDING)'인 출고서를 승인 처리한다. <br>" +
+                    "승인 후 상태는 APPROVED로 변경된다."
+    )
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<BaseResponse<String>> approveOutbound(@PathVariable Long id) {
+        outboundService.approveOutbound(id);
+        return ResponseEntity.ok(BaseResponse.success("출고 승인 완료"));
+    }
+
+    // 검수 작업
+    @PatchMapping("/{id}/inspection")
+    public ResponseEntity<BaseResponse<String>> inspectionOutbound(@PathVariable Long id, @RequestBody List<OutboundInspectionRequest> requestList) {
+        outboundService.updateInspection(id, requestList);
+        return ResponseEntity.ok(BaseResponse.success("출고 검수 완료"));
+    }
+
+    // 출고 거절
+    @Operation(
+            summary = "출고 거절",
+            description = "출고 요청 상태가 '승인 대기(PENDING)'인 출고서를 거절 처리한다. <br>" +
+                    "거절 후 상태는 REJECTED로 변경된다."
+    )
+    @PatchMapping("/{id}/cancelled")
+    public ResponseEntity<BaseResponse<String>> cancelledOutbound(@PathVariable Long id) {
+        outboundService.cancelledOutbound(id);
+        return ResponseEntity.ok(BaseResponse.success("출고 작업 취소"));
     }
 }

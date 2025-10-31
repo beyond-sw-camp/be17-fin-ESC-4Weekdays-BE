@@ -1,6 +1,6 @@
 package com.fourweekdays.fourweekdays.product.repository;
 
-import com.fourweekdays.fourweekdays.product.model.ProductStatusHistory;
+import com.fourweekdays.fourweekdays.product.model.entity.ProductStatusHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

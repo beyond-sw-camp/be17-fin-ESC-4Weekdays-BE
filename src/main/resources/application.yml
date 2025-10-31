@@ -9,4 +9,14 @@ spring:
   jpa:
     #    show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${access_key}
+        secret-key: ${secret_key}
+      s3:
+        bucket: ${bucket}
+      region:
+        static: ap-northeast-2

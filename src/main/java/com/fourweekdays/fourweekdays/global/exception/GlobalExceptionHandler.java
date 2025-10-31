@@ -17,6 +17,12 @@ public class GlobalExceptionHandler {
         String errorMessage = e.getExceptionType().message();
 
         log.error("[{}] >> {}", errorClassName, errorMessage);
+
+        // 원인(cause) 로그 추가 — 내부 어디서 터졌는지 확인 가능
+        if (e.getCause() != null) {
+            log.error("[{} Cause] {}", errorClassName, e.getCause().getMessage(), e.getCause());
+        }
+
         return ResponseEntity.ok(ErrorResponse.of(httpStatusCode, errorMessage));
     }
 

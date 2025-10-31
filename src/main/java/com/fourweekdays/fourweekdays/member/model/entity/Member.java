@@ -1,8 +1,6 @@
 package com.fourweekdays.fourweekdays.member.model.entity;
 
 import com.fourweekdays.fourweekdays.common.BaseEntity;
-import com.fourweekdays.fourweekdays.product.model.ProductStatus;
-import com.fourweekdays.fourweekdays.vendor.model.entity.Vendor;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,10 +32,10 @@ public class Member extends BaseEntity {
     // ===== 로직 ===== //
     public void update(String name, String phoneNumber, String password,
                        MemberRole role, AuthStatus status) {
-        this.name = name;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-        this.role = role;
-        this.status = status;
+        if (name != null)this.name = name;
+        if (password != null)this.password = password;
+        if (phoneNumber != null)this.phoneNumber = phoneNumber;
+        if (role != null)this.role = role;
+        if (status != null)this.status = status;
     }
 }

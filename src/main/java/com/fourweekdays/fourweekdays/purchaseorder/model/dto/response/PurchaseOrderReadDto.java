@@ -23,20 +23,20 @@ public class PurchaseOrderReadDto {
     private final PurchaseOrderStatus status; // 상태
     private final Long totalAmount; // 총 금액
     private final String description; // 비고
-    private final List<PurchaseOrderItemResponseDto> items; // 발주 상품 목록
+    private final List<PurchaseOrderProductResponseDto> items; // 발주 상품 목록
 
     public static PurchaseOrderReadDto toDto(PurchaseOrder entity) {
         return PurchaseOrderReadDto.builder()
                 .id(entity.getId())
-                .orderNumber(entity.getOrderNumber())
+                .orderNumber(entity.getOrderCode())
                 .vendorName(entity.getVendor().getName())
                 .orderDate(entity.getOrderDate())
                 .expectedDate(entity.getExpectedDate())
                 .status(entity.getStatus())
-                .totalAmount(entity.getTotalAmount())
+                .totalAmount(entity.calculateTotalAmount())
                 .description(entity.getDescription())
-                .items(entity.getItems().stream()
-                        .map(PurchaseOrderItemResponseDto::toDto)
+                .items(entity.getProducts().stream()
+                        .map(PurchaseOrderProductResponseDto::toDto)
                         .toList())
                 .build();
     }

@@ -13,9 +13,8 @@ import java.util.List;
 public class InboundReadDto {
 
 
-    private Long id;  // inboundId → id로 통일 권장
-    private String inboundNumber;  // 입고번호 추가 ✅
-
+    private Long id;
+    private String inboundNumber;
     private InboundStatus status;
 
     // 담당자 정보
@@ -25,10 +24,9 @@ public class InboundReadDto {
     private LocalDateTime scheduledDate;
 //    private LocalDateTime receivedDate;
 //    private LocalDateTime completedDate;
-
-    // 발주 정보 (있는 경우)
+    
     private PurchaseOrderSummary purchaseOrder; // 발주 상세정보
-    private List<InboundProductItemResponseDto> items;
+    private List<InboundProductResponseDto> items;
 
     private String description;
 
@@ -45,25 +43,29 @@ public class InboundReadDto {
         private String vendorName;
         private LocalDateTime orderDate;
     }
+    private InboundOrderDto order;
 
-    // Entity to DTO 변환 메서드 추가 권장
     public static InboundReadDto from(Inbound inbound) {
         return InboundReadDto.builder()
                 .id(inbound.getId())
-                .inboundNumber(inbound.getInboundNumber())
+                .inboundNumber(inbound.getInboundCode())
                 .status(inbound.getStatus())
                 .managerName(inbound.getManagerName())
                 .scheduledDate(inbound.getScheduledDate())
+                .order(InboundOrderDto.from(inbound.getPurchaseOrder()))
+                .items(inbound.getProducts().stream()
+                        .map(InboundProductResponseDto::from)
+                        .toList())
                 .purchaseOrder(inbound.getPurchaseOrder() != null ?
                         PurchaseOrderSummary.builder()
                                 .id(inbound.getPurchaseOrder().getId())
-                                .orderNumber(inbound.getPurchaseOrder().getOrderNumber())
+                                .orderNumber(inbound.getPurchaseOrder().getOrderCode())
                                 .vendorName(inbound.getPurchaseOrder().getVendor().getName())
                                 .orderDate(inbound.getPurchaseOrder().getOrderDate())
                                 .build()
                         : null)
-                .items(inbound.getItems().stream()
-                        .map(InboundProductItemResponseDto::from)
+                .items(inbound.getProducts().stream()
+                        .map(InboundProductResponseDto::from)
                         .toList())
                 .description(inbound.getDescription())
                 .createdAt(inbound.getCreatedAt())

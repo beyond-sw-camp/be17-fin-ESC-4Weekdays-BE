@@ -1,41 +1,77 @@
 package com.fourweekdays.fourweekdays.inventory.model.entity;
 
 import com.fourweekdays.fourweekdays.common.BaseEntity;
-import com.fourweekdays.fourweekdays.member.model.entity.Member;
-import com.fourweekdays.fourweekdays.product.model.Product;
+import com.fourweekdays.fourweekdays.inbound.model.entity.Inbound;
+import com.fourweekdays.fourweekdays.inventory.exception.InventoryException;
+import com.fourweekdays.fourweekdays.location.model.entity.Location;
+import com.fourweekdays.fourweekdays.product.model.entity.Product;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import static com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType.INSUFFICIENT_INVENTORY;
+import static com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType.INVALID_QUANTITY;
+
+@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Inventory extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String inventoryId;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product; // 어떤 상품인지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-    private int quantity;  // 재고 수량
-    private String location; // 보관 위치 (선반, 랙 등 예: A12309 구역)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
 
-    @ManyToOne
-    @JoinColumn(name = "member_id")
-    private Member member; // 적치 작업자가 누구인지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inbound_id", insertable = false, updatable = false)
+    private Inbound inbound;
 
-// 입고/출고를 관계맺어 사용하게 된다면 Member를 지우고 입고/출고에 할당되어 있는 작업자를 조회
+//    @Column(name = "inbound_id", insertable = false, updatable = false)
+//    private Long inboundId; // 입고 history 추적 때문에 넣음
 
-//    @ManyToOne
-//    @JoinColumn(name = "inbound_id")
-//    private Inbound inbound;
-//    입고가 언제 되었는지 어떤 입고 작업이었는지 기록하면 좋을 것 같음
+    @Column(length = 50)
+    private String lotNumber;
 
-//    @ManyToOne
-//    @JoinColumn(name = "outbound_id")
-//    private Outbound outbound;
-//    출고는 재고 기록용으로
+    @Column(nullable = false)
+    private Integer quantity;
 
-//    @ManyToOne
-//    @JoinColumn(name = "warehouse_id")
-//    private Warehouse warehouse;
+    @Column(length = 1000)
+    private String description;
+
+    @Builder
+    public Inventory(Product product, Location location, String lotNumber,
+                     Integer quantity, String description) {
+        this.product = product;
+        this.location = location;
+        this.lotNumber = lotNumber;
+        this.quantity = quantity;
+        this.description = description;
+    }
+
+    // ===== 비즈니스 로직 ===== //
+    public void increaseQuantity(int amount) {
+        if (amount <= 0) {
+            throw new InventoryException(INVALID_QUANTITY);
+        }
+        this.location.increaseUsedCapacity(amount); // 용량 체크 및 증가
+        this.quantity += amount;
+    }
+
+    public void decreaseQuantity(int amount) {
+        if (amount <= 0) {
+            throw new InventoryException(INVALID_QUANTITY);
+        }
+        if (this.quantity < amount) {
+            throw new InventoryException(INSUFFICIENT_INVENTORY);
+        }
+        this.quantity -= amount;
+        this.location.decreaseUsedCapacity(amount);
+    }
 }
