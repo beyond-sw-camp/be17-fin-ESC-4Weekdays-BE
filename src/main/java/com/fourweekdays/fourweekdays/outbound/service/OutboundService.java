@@ -106,6 +106,8 @@ public class OutboundService {
 
         // 출고 작업 생성
         otfTaskFactory.createPickingTask(id);
+        destroyOrDecreaseFromOutbound(id);
+
     }
 
     // 출고 거절

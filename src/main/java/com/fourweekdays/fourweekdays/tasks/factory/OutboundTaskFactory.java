@@ -20,7 +20,6 @@ public class OutboundTaskFactory {
 
     private final TaskRepository taskRepository;
     private final OutboundRepository outboundRepository;
-    private final OutboundService outboundService;
 
     @Transactional
     public Long createPickingTask(Long outboundId) {
@@ -28,14 +27,6 @@ public class OutboundTaskFactory {
                 .orElseThrow(() -> new OutboundException(OUTBOUND_NOT_FOUND));
 
         Task task = createTask(TaskCategory.PICKING, outboundId);
-        // PickingTask를 만들어야 할 이유를 모르겠음
-        // 조회할때 Outbound -> OutboundProductItem -> Product -> Vendor -> Location
-        // 나중에 필요하다 생각되면 PickingTask를 만들어서 거기에 저장해두고 불러오게
-        // 검증도 마찬가지 Outbound -> OutboundProductItem -> Product -> Vendor -> Location
-        // 비효율적인것 같긴함
-
-        // TODO 제고 감소
-        outboundService.destroyOrDecreaseFromOutbound(outboundId);
         return task.getId();
     }
 
