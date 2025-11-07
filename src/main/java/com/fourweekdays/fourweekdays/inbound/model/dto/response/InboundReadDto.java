@@ -41,6 +41,7 @@ public class InboundReadDto {
         private Long id;
         private String orderNumber;
         private String vendorName;
+        private Long vendorId;
         private LocalDateTime orderDate;
     }
     private InboundOrderDto order;
@@ -61,6 +62,7 @@ public class InboundReadDto {
                                 .id(inbound.getPurchaseOrder().getId())
                                 .orderNumber(inbound.getPurchaseOrder().getOrderCode())
                                 .vendorName(inbound.getPurchaseOrder().getVendor().getName())
+                                .vendorId(inbound.getPurchaseOrder().getVendor().getId())
                                 .orderDate(inbound.getPurchaseOrder().getOrderDate())
                                 .build()
                         : null)

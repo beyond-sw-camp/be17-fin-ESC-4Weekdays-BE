@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -47,11 +48,50 @@ public class SecurityConfig {
     public SecurityFilterChain configure(HttpSecurity http, VendorApiKeyFilter vendorApiKeyFilter) throws Exception {
         http.authorizeHttpRequests(
                 (auth) -> auth
-                        .requestMatchers("/api/member/**").permitAll()
-                        .requestMatchers("/api/asn/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
+
+                        //관리자만 가능(생성)
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/announcement", "/api/franchises", "/api/products",
+                                "/api/vendors", "/api/warehouses", "/api/category", "/api/member/signup",
+                                "/api/purchase-orders"
+                        ).hasRole("ADMIN")
+                        //관리자만 가능(변경)
+                        .requestMatchers(HttpMethod.PATCH,
+                                "/api/announcement/**", "/api/franchises/**", "/api/products/**",
+                                "/api/vendors/**", "/api/warehouses/**", "/api/member/**",
+                                "/api/inbounds/**",
+                                "/api/outbounds/**",
+                                "/api/purchase-orders/**"
+                        ).hasRole("ADMIN")
+                        //관리자만 가능(삭제)
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/announcement/**", "/api/franchises/**", "/api/products/**",
+                                "/api/vendors/**", "/api/warehouses/**", "/api/inbounds/**",
+                                "/api/purchase-orders/**"
+                        ).hasRole("ADMIN")
+                        //관리자만 가능(asn,order)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // 3. 작업자(WORKER) 이상 접근 가능 경로
+                        .requestMatchers("/api/tasks/**", "/api/inbound-tasks/**").hasAnyRole("ADMIN", "MANAGER", "WORKER")
+
+                        // 4. 매니저(MANAGER) 이상 접근 가능 경로 (주로 GET 조회)
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/announcement/**", "/api/franchises/**", "/api/products/**",
+                                "/api/vendors/**", "/api/warehouses/**", "/api/category/**",
+                                "/api/member/**", "/api/purchase-orders/**", "/api/inbounds/**",
+                                "/api/outbounds/**", "/api/inventories/**", "/api/locations/**"
+                        ).hasAnyRole("ADMIN", "MANAGER")
+
+                        // 5. 외부 API (Filter에서 인증 처리)
+                        .requestMatchers("/api/vendor/asn/**", "/api/franchise/order/**").authenticated()
+
+                        // 6. 그 외 모든 요청은 인증된 사용자만 접근 가능
+                        .anyRequest().authenticated()
         );
 
+        // 이하 CORS, CSRF, Logout 등 나머지 설정은 동일
         http.cors(cors ->
                 cors.configurationSource(corsConfigurationSource()));
 
@@ -65,7 +105,7 @@ public class SecurityConfig {
                 .logoutSuccessHandler((request, response, authentication) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"message\":\"로그아웃에 성공하였습니다.\"}");
+                    response.getWriter().write("{'''message''':'''로그아웃에 성공하였습니다.'''}");
                 })
         );
 

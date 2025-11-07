@@ -21,8 +21,16 @@ public class AnnouncementService {
 
     private final AnnouncementRepository announcementRepository;
 
-    public Long create(AnnouncementCreateDto dto ,String name) {
-        Announcement result = announcementRepository.save(dto.toEntity(name));
+    @Transactional
+    public Long create(AnnouncementCreateDto dto, String name) {
+        Announcement announcement = Announcement.builder()
+                .title(dto.getTitle())
+                .content(dto.getContent())
+                .pinned(dto.getPinned())
+                .name(name)
+                .build();
+
+        Announcement result = announcementRepository.save(announcement);
         return result.getId();
     }
 

@@ -16,7 +16,9 @@ public record TaskDetailResponse(
         LocalDateTime completedAt,
 
         Long referenceId,
-        String referenceCode
+        String referenceCode,
+        String assignedLocationCode
+        //TODO: 지금은 일단 검수 적치 밖에 없으니 Dto에 추가하는 형식으로 가고 나중에 피킹 포장 만들어지면 각자 응답 쪼개는게 응답 나누는 방식이 좋을듯
 ) {
     public static TaskDetailResponse ofInspection(Task task, InspectionTask inspectionTask, Inbound inbound) {
         return new TaskDetailResponse(
@@ -29,7 +31,8 @@ public record TaskDetailResponse(
                 task.getStartedAt(),
                 task.getCompletedAt(),
                 inbound.getId(),
-                inbound.getInboundCode()
+                inbound.getInboundCode(),
+                null
         );
     }
 
@@ -44,7 +47,8 @@ public record TaskDetailResponse(
                 task.getStartedAt(),
                 task.getCompletedAt(),
                 inbound.getId(),
-                inbound.getInboundCode()
+                inbound.getInboundCode(),
+                putawayTask.getAssignedLocationCode()
         );
     }
 }

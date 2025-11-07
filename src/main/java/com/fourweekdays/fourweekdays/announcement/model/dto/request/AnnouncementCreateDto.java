@@ -11,11 +11,11 @@ public class AnnouncementCreateDto {
     private String title;
     private String content;
     private Boolean pinned;
-
-    public Announcement toEntity(String name) {
+    private String name;
+    public Announcement toEntity() {
         return Announcement.builder()
-                .name(name)
                 .title(title)
+                .name(name)
                 .content(content)
                 .pinned(pinned)
                 .build();

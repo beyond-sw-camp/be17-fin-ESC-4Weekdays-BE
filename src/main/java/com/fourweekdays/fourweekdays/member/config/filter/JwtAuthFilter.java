@@ -67,7 +67,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     Authentication authentication = new UsernamePasswordAuthenticationToken(
                             authUser,
                             null,
-                            List.of(new SimpleGrantedAuthority(role))
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
                     // SecurityContext에 Authentication 객체 저장
