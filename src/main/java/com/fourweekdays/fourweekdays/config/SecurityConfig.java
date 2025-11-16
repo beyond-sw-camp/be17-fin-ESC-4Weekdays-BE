@@ -131,11 +131,11 @@ public class SecurityConfig {
         );
 
         http.addFilterBefore(vendorApiKeyFilter, UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(new JwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterAt(
                 new LoginFilter(configuration.getAuthenticationManager(), LOGIN_URL),
                 UsernamePasswordAuthenticationFilter.class
         );
+        http.addFilterBefore(new JwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,4 +1,4 @@
-package com.fourweekdays.fourweekdays.search;
+package com.fourweekdays.fourweekdays.search.controller.model.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
