@@ -1,4 +1,4 @@
-package com.fourweekdays.fourweekdays.search.controller.exception;
+package com.fourweekdays.fourweekdays.search.exception;
 
 import com.fourweekdays.fourweekdays.global.exception.ExceptionType;
 import org.springframework.http.HttpStatus;
