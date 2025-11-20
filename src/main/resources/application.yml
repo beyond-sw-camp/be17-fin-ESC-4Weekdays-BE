@@ -10,6 +10,7 @@ spring:
         password: ${REDIS_PASSWORD}
       url: ${REDIS_URL}
       host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
