@@ -6,7 +6,7 @@ spring:
     redis:
       sentinel:
         nodes: ${REDIS_SENTINEL_NODES}
-        master: ${REDIS_SENTINEL_MASTER}
+        master: ${REDIS_MASTER}
         password: ${REDIS_PASSWORD}
 
   datasource:
