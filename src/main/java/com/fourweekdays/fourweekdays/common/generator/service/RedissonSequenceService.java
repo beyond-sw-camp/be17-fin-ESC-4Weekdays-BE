@@ -2,6 +2,7 @@ package com.fourweekdays.fourweekdays.common.generator.service;
 
 import com.fourweekdays.fourweekdays.common.generator.entity.Sequence;
 import com.fourweekdays.fourweekdays.common.generator.repository.SequenceRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -16,67 +17,58 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedissonSequenceService {
 
+    private final EntityManager entityManager;
     private final RedissonClient redissonClient;
     private final SequenceRepository repository;
-
-    private static final int LOCK_WAIT_SECONDS = 3;
-    private static final int LOCK_LEASE_SECONDS = 10;
-    private static final int MAX_RETRIES = 5;
-    private static final long RETRY_DELAY_MS = 50;
 
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    private static final int WAIT_SEC = 5;
+    private static final int LEASE_SEC = 8;
+    private static final int MAX_RETRY = 5;
+
     @Transactional
-    public String generate(String prefix) {
+    public String generate(String prefix) throws InterruptedException {
 
         String lockKey = "lock:seq:" + prefix;
         RLock lock = redissonClient.getLock(lockKey);
 
-        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        while (true) {
+            boolean locked = false;
+
             try {
-                if (lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS)) {
+                locked = lock.tryLock(WAIT_SEC, LEASE_SEC, TimeUnit.SECONDS);
 
-                    try {
-                        String today = LocalDate.now().format(DATE_FMT);
-
-                        Sequence seq = repository.findByPrefix(prefix)
-                                .orElseGet(() ->
-                                        repository.save(
-                                                Sequence.builder()
-                                                        .prefix(prefix)
-                                                        .currentValue(0)
-                                                        .lastDate(today)
-                                                        .build()
-                                        )
-                                );
-
-                        if (!today.equals(seq.getLastDate())) {
-                            seq.reset(today);
-                        }
-
-                        seq.increase();
-
-                        return formatCode(prefix, today, seq.getCurrentValue());
-
-                    } finally {
-                        lock.unlock();
-                    }
-
-                } else {
-                    Thread.sleep(RETRY_DELAY_MS);
+                if (!locked) {
+                    // 락 획득 실패 → 다시 시도
+                    continue;
                 }
+
+                String today = LocalDate.now().format(DATE_FMT);
+
+                Sequence seq = repository.findByPrefix(prefix)
+                        .orElseGet(() -> repository.save(new Sequence(prefix, 0, today)));
+
+                seq.increase();
+
+                repository.save(seq);
+                entityManager.flush();
+
+                return format(prefix, today, seq.getCurrentValue());
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("락 대기 중 인터럽트 발생", e);
+                throw new IllegalStateException(e);
+            } finally {
+                lock.unlock();
             }
         }
-
-        throw new IllegalStateException("Lock 획득 실패: 최대 재시도 " + MAX_RETRIES + "회");
     }
 
-    private String formatCode(String prefix, String datePart, int value) {
-        return String.format("%s-%s-%04d", prefix, datePart, value);
+
+    private String format(String prefix, String date, int value) {
+        return String.format("%s-%s-%04d", prefix, date, value);
     }
+
 }

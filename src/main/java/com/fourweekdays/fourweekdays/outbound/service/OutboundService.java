@@ -82,21 +82,60 @@ public class OutboundService {
         return outboundRepository.save(outbound).getId();
     }
 
-    // 출고 승인
+    // 출고 승인 (동시성 제어)
+    /**
+     * 한 Outbound 에 대해 승인 로직은 "실제 재고 차감"이 단 한 번만 일어나도록 설계.
+     * - 분산락: 같은 OutboundId 에 대해 동시에 approve 로직이 들어오지 않도록 Redisson 사용
+     * - DB 업데이트: status = REQUESTED 인 경우에만 APPROVED 로 변경
+     *   -> update 카운트가 0이면 이미 다른 스레드가 승인 완료한 상태이므로 조용히 return
+     */
     @Transactional
-    public void approveOutbound(Long id) {
-        Outbound outbound = checkOutbound(id);
-        outbound.updateStatus(OutboundStatus.APPROVED);
-        Long taskId = otfTaskFactory.createPickingTask(id);
-        destroyOrDecreaseFromOutbound(id, taskId);
+    public boolean approveOutbound(Long outboundId) {
+
+        String lockKey = "outbound:approve:" + outboundId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            boolean locked = lock.tryLock(5, 3, TimeUnit.SECONDS);
+            if (!locked) {
+                return false;
+            }
+
+            int updatedRows = outboundRepository.updateStatusIfMatches(
+                    outboundId,
+                    OutboundStatus.REQUESTED,
+                    OutboundStatus.APPROVED
+            );
+
+            // 최초 승인자만 true
+            if (updatedRows == 0) {
+                return false;
+            }
+
+            Outbound outbound = outboundRepository.findByIdWithItemsAndProduct(outboundId)
+                    .orElseThrow(() -> new OutboundException(OUTBOUND_NOT_FOUND));
+
+            destroyOrDecreaseFromOutbound(outbound, null);
+
+            return true;
+
+        } catch (InterruptedException e) {
+            return false;
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
+
 
     // 출고 취소
     @Transactional
     public void cancelledOutbound(Long id) {
         Outbound outbound = checkOutbound(id);
 
-        if (outbound.getStatus() != OutboundStatus.APPROVED && outbound.getStatus() != OutboundStatus.REQUESTED) {
+        if (outbound.getStatus() != OutboundStatus.APPROVED &&
+                outbound.getStatus() != OutboundStatus.REQUESTED) {
             throw new OutboundException(OUTBOUND_CANNOT_CANCEL);
         }
         outbound.updateStatus(OutboundStatus.CANCELLED);
@@ -109,41 +148,19 @@ public class OutboundService {
         recoverInventoryFromOutboundHistory(histories);
     }
 
-    // 피킹 완료
+    // 상태 변경
     @Transactional
     public void updatePicking(Long id) {
         Outbound outbound = checkOutbound(id);
         outbound.updateStatus(OutboundStatus.PICKING);
     }
 
-    // 패킹 완료
     @Transactional
     public void updatePacking(Long id) {
         Outbound outbound = checkOutbound(id);
         outbound.updateStatus(OutboundStatus.PACKING);
     }
 
-    //
-//    // 검수 완료 작업
-//    @Transactional
-//    public void updateInspection(Long id, List<OutboundInspectionRequest> requestList) {
-//        Outbound outbound = checkOutbound(id);
-//
-//        if (outbound.getStatus() != OutboundStatus.INSPECTION) {
-//            throw new OutboundException(OUTBOUND_INVALID_STATUS_FOR_INSPECTION);
-//        }
-//
-//        for (OutboundInspectionRequest request : requestList) {
-//            OutboundProductItem item = outbound.findByItemId(request.getOutboundProductid())
-//                    .orElseThrow(() -> new OutboundException(OUTBOUND_PRODUCT_NOT_FOUND));
-//            item.updateInspectionResult(request.getOrderedQuantity());
-//        }
-//
-//        // 검수 완료 -> 패킹작업으로 변경
-//        outbound.updateStatus(OutboundStatus.PACKING);
-//    }
-//
-    // 출하 완료시 호출 메소드 Order에서 사용할 예정 아니면 상태 하나더 만들던가
     @Transactional
     public void updateShipped(Long id) {
         Outbound outbound = checkOutbound(id);
@@ -153,35 +170,31 @@ public class OutboundService {
         outbound.updateStatus(OutboundStatus.SHIPPED);
     }
 
-    // 출고 목록 조회
+    // 조회
     public Page<OutboundReadDto> getOutboundList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Outbound> outbound = outboundRepository.findAllWithPaging(pageable);
         return outbound.map(OutboundReadDto::from);
     }
 
-    // 출고 상세 조회
     public OutboundReadDto getOutboundDetails(Long id) {
         Outbound outbound = outboundRepository.findById(id)
                 .orElseThrow(() -> new OutboundException(OUTBOUND_NOT_FOUND));
         return OutboundReadDto.from(outbound);
     }
 
-    // 재고 감소 로직
-    private void destroyOrDecreaseFromOutbound(Long outboundId, Long taskId) {
+    // 재고 감소 (FIFO)
+    private void destroyOrDecreaseFromOutbound(Outbound outbound, Long taskId) {
         List<OutboundInventoryHistory> allHistories = new ArrayList<>();
-
-        Outbound outbound = outboundRepository.findByIdWithItemsAndProduct(outboundId)
-                .orElseThrow(() -> new OutboundException(OUTBOUND_NOT_FOUND));
 
         if (outbound.getItems().isEmpty()) {
             throw new OutboundException(OUTBOUND_PRODUCT_NOT_FOUND);
         }
-        List<OutboundProductItem> items = outbound.getItems();
 
         for (OutboundProductItem item : outbound.getItems()) {
-            // 재고 감소전 product 단위 락 획득
-            String productLockKey = String.format("inventory:decrease:lock:%d", item.getProduct().getId());
+
+            Long productId = item.getProduct().getId();
+            String productLockKey = String.format("inventory:decrease:lock:%d", productId);
             RLock productLock = redissonClient.getLock(productLockKey);
 
             try {
@@ -192,12 +205,14 @@ public class OutboundService {
 
                 List<OutboundInventoryHistory> histories =
                         decreaseInventoryByFIFO(
-                                item.getProduct().getId(),
+                                productId,
                                 item.getOrderedQuantity(),
                                 outbound,
                                 taskId
                         );
+
                 allHistories.addAll(histories);
+
             } catch (InterruptedException e) {
                 throw new InventoryException(LOCK_INTERRUPTED);
             } finally {
@@ -212,14 +227,18 @@ public class OutboundService {
         }
     }
 
-    // 재고 감소 로직 내부
-    private List<OutboundInventoryHistory> decreaseInventoryByFIFO(Long productId, Integer requiredQuantity, Outbound outbound, Long taskId) {
+    private List<OutboundInventoryHistory> decreaseInventoryByFIFO(
+            Long productId,
+            Integer requiredQuantity,
+            Outbound outbound,
+            Long taskId
+    ) {
         List<OutboundInventoryHistory> histories = new ArrayList<>();
-        Integer remainingQuantity = requiredQuantity;
+        int remainingQuantity = requiredQuantity;
 
-        // pessimistic_write로 row-level 보호
-        List<Inventory> inventories = inventoryRepository
-                .findAllByProductIdOrderByLotNumberAsc(productId);
+        List<Inventory> inventories =
+                inventoryRepository.findAllByProductIdOrderByLotNumberAsc(productId);
+
         if (inventories.isEmpty()) {
             throw new InventoryException(INVENTORY_NOT_FOUND);
         }
@@ -231,7 +250,6 @@ public class OutboundService {
             String locationLockKey = String.format("location:lock:%d", inventory.getLocation().getId());
             RLock locationLock = redissonClient.getLock(locationLockKey);
 
-            // Location 단위 락 획득
             try {
                 boolean locked = locationLock.tryLock(10, 5, TimeUnit.SECONDS);
                 if (!locked) {
@@ -242,22 +260,21 @@ public class OutboundService {
 
                 // 재고 감소
                 inventory.decrease(decreaseAmount);
-                // 용량 감소
+                // 로케이션 사용량 감소
                 inventory.getLocation().decreaseUsedCapacity(decreaseAmount);
 
-                histories.add(
-                        OutboundInventoryHistory.builder()
-                                .outbound(outbound)
-                                .inventory(inventory)
-                                .product(inventory.getProduct())
-                                .location(inventory.getLocation())
-                                .quantityChanged(decreaseAmount)
-                                .lotNumber(inventory.getLotNumber())
-                                .taskId(taskId)
-                                .status(OutboundInventoryHistoryStatus.PENDING)
-                                .build()
-                );
+                OutboundInventoryHistory history = OutboundInventoryHistory.builder()
+                        .outbound(outbound)
+                        .inventory(inventory)
+                        .product(inventory.getProduct())
+                        .location(inventory.getLocation())
+                        .quantityChanged(decreaseAmount)
+                        .lotNumber(inventory.getLotNumber())
+                        .taskId(taskId) //
+                        .status(OutboundInventoryHistoryStatus.PENDING)
+                        .build();
 
+                histories.add(history);
                 remainingQuantity -= decreaseAmount;
 
             } catch (InterruptedException e) {
@@ -267,22 +284,6 @@ public class OutboundService {
                     locationLock.unlock();
                 }
             }
-//            // TODO 재고 소프트 딜리트 구현 -> 재고 0 = 소프트 딜리트
-//
-//            int decreaseAmount = Math.min(currentStock, remainingQuantity);
-//            inventory.decrease(decreaseAmount);
-//            OutboundInventoryHistory history = OutboundInventoryHistory.builder()
-//                    .outbound(outbound)
-//                    .inventory(inventory)
-//                    .product(inventory.getProduct())
-//                    .location(inventory.getLocation())
-//                    .quantityChanged(decreaseAmount)
-//                    .lotNumber(inventory.getLotNumber())
-//                    .taskId(taskId)
-//                    .status(OutboundInventoryHistoryStatus.PENDING)
-//                    .build();
-//            histories.add(history);
-//            remainingQuantity -= decreaseAmount;
         }
 
         if (remainingQuantity > 0) {
@@ -292,44 +293,43 @@ public class OutboundService {
         return histories;
     }
 
-    // 재고 증가 로직
+    // 재고 복구
     private void recoverInventoryFromOutboundHistory(List<OutboundInventoryHistory> histories) {
-        if (!histories.isEmpty()) {
-            for (OutboundInventoryHistory history : histories) {
-                Inventory inventory = history.getInventory();
-                inventory.increase(history.getQuantityChanged());
+        if (histories.isEmpty()) {
+            return;
+        }
 
-                history.cancel();
-            }
+        for (OutboundInventoryHistory history : histories) {
+            Inventory inventory = history.getInventory();
+            inventory.increase(history.getQuantityChanged());
+            history.cancel();
+        }
 
-            Long taskId = histories.get(0).getTaskId();
-            if (taskId != null) {
-                Task task = taskRepository.findById(taskId)
-                        .orElseThrow(() -> new TaskException(TASK_NOT_FOUND));
-                task.cancel("출고서 취소로 인한 작업 취소");
-            }
+        Long taskId = histories.get(0).getTaskId();
+        if (taskId != null) {
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new TaskException(TASK_NOT_FOUND));
+            task.cancel("출고서 취소로 인한 작업 취소");
         }
     }
 
-    // 검증 로직들
-
+    // 검증 / 헬퍼
     private void validateAllHistoriesArePending(List<OutboundInventoryHistory> histories) {
         if (histories.isEmpty()) {
             return;
         }
         boolean hasNonPendingHistory = histories.stream()
                 .anyMatch(h -> h.getStatus() != OutboundInventoryHistoryStatus.PENDING);
+
         if (hasNonPendingHistory) {
             throw new OutboundException(OUTBOUND_HISTORY_ALREADY_PROCESSED);
         }
-
     }
 
     private Outbound createBaseOutbound(OutboundCreateDto dto, Member manager) {
-        String OutboundCode = codeGenerator.generate(OUTBOUND_CODE_PREFIX);
+        String outboundCode = codeGenerator.generate(OUTBOUND_CODE_PREFIX);
         OutboundStatus status = OutboundStatus.REQUESTED;
-
-        return dto.toEntity(OutboundCode, status, manager);
+        return dto.toEntity(outboundCode, status, manager);
     }
 
     private void addItemsFromOrder(Outbound outbound, Order order) {

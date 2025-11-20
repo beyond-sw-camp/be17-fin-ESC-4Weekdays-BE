@@ -12,22 +12,25 @@ import org.springframework.context.annotation.Profile;
 @Profile("!test")
 public class RedissonConfig {
 
-    @Value("${spring.data.redis.host}")
-    private String redisHost;
+    @Value("${redis.sentinel.nodes}")
+    private String sentinelNodes;
 
-    @Value("${spring.data.redis.port}")
-    private int redisPort;
+    @Value("${redis.sentinel.master}")
+    private String masterName;
 
-    @Value("${spring.data.redis.password}")
+    @Value("${redis.password}")
     private String redisPassword;
 
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
+
         config.useSentinelServers()
-                .setMasterName("mymaster")
-                .addSentinelAddress("redis://" + redisHost + ":" + redisPort)
-                .setPassword(redisPassword);
+                .addSentinelAddress(sentinelNodes.split(","))
+                .setMasterName(masterName)
+                .setPassword(redisPassword)
+                .setDatabase(0);
+
         return Redisson.create(config);
     }
 }
