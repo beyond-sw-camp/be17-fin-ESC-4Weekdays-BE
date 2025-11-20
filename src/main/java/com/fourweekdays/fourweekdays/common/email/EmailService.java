@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
-//@Service
+@Service
 public class EmailService {
 
     private final EmailSender emailSender;

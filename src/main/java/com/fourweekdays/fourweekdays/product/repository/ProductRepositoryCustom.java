@@ -7,7 +7,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface ProductRepositoryCustom {
 
-    Page<Product> findAllWithPaging(Pageable pageable);
-
     Page<Product> searchProducts(Pageable pageable, ProductSearchRequest request);
 }

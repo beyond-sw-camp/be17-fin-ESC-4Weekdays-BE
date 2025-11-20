@@ -8,7 +8,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
-//@Component
+@Component
 public class SmtpEmailSender implements EmailSender {
 
     private final JavaMailSender mailSender;

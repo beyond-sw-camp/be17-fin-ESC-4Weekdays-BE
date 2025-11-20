@@ -22,7 +22,7 @@ import javax.net.ssl.SSLContext;
 import java.net.URI;
 
 @Configuration
-@EnableElasticsearchRepositories(basePackages = "com.fourweekdays.fourweekdays.search")
+@EnableElasticsearchRepositories(basePackages = "com.fourweekdays.fourweekdays")
 public class ElasticsearchConfig {
 
     @Value("${spring.elasticsearch.uris}")

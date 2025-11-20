@@ -61,6 +61,13 @@ public class ProductService {
         return ProductReadDto.from(product);
     }
 
+    public Page<ProductReadDto> searchProduct(ProductSearchRequest request, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Product> products = productRepository.searchProducts(pageable, request);
+
+        return products.map(ProductReadDto::from);
+    }
+
     @Transactional
     public Long update(Long id, ProductUpdateDto requestDto) {
         Product product = productRepository.findById(id)
@@ -82,40 +89,5 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException(PRODUCT_NOT_FOUND));
         product.delete();
-    }
-
-    public Page<ProductReadDto> searchProduct(ProductSearchRequest request, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productRepository.searchProducts(pageable, request);
-
-        return products.map(ProductReadDto::from);
-    }
-
-
-    public Page<ProductReadDto> getProductList(int page, int size) {
-        // TODO: 리팩토링 포인트 - HttpRequest가 Service 레이어까지 침범
-        Pageable pageable = PageRequest.of(page, size);
-
-        // RequestParam으로 전달된 vendorId 추출
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attrs != null ? attrs.getRequest() : null;
-
-        Long vendorId = null;
-        if (request != null && request.getParameter("vendorId") != null) {
-            vendorId = Long.valueOf(request.getParameter("vendorId"));
-        }
-
-        Page<Product> productList;
-
-        // vendorId가 존재하면 해당 벤더의 ACTIVE 상품만 조회
-        if (vendorId != null) {
-            productList = productRepository.findByVendorIdAndStatus(vendorId, ProductStatus.ACTIVE, pageable);
-        }
-        // vendorId 없으면 전체 ACTIVE 상품만 조회
-        else {
-            productList = productRepository.findByStatus(ProductStatus.ACTIVE, pageable);
-        }
-
-        return productList.map(ProductReadDto::from);
     }
 }

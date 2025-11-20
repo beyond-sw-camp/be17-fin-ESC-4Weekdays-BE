@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.fourweekdays.fourweekdays.product.model.entity.QProduct.product;
@@ -19,24 +20,7 @@ import static com.fourweekdays.fourweekdays.product.model.entity.QProduct.produc
 public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-
     @Override
-    public Page<Product> findAllWithPaging(Pageable pageable) {
-        List<Product> products = queryFactory
-                .selectFrom(product)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .orderBy(product.createdAt.desc())
-                .fetch();
-
-        Long total = queryFactory
-                .select(product.count())
-                .from(product)
-                .fetchOne();
-
-        return new PageImpl<>(products, pageable, total);
-    }
-
     public Page<Product> searchProducts(Pageable pageable, ProductSearchRequest request) {
         List<Product> results = queryFactory
                 .selectFrom(product)
@@ -45,11 +29,13 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
                         productCodeEq(request.productCode()),
                         productNameLike(request.productName()),
                         productStatusEq(request.status()),
-                        vendorNameContains(request.vendorName())
+                        vendorNameContains(request.vendorName()),
+                        unitPriceBetween(request.minPrice(), request.maxPrice()),
+                        createdAtBetween(request.registeredFrom(), request.registeredTo())
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(product.createdAt.desc())
+                .orderBy(product.id.desc())
                 .fetch();
 
         Long total = queryFactory
@@ -60,7 +46,9 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
                         productCodeEq(request.productCode()),
                         productNameLike(request.productName()),
                         productStatusEq(request.status()),
-                        vendorNameContains(request.vendorName())
+                        vendorNameContains(request.vendorName()),
+                        unitPriceBetween(request.minPrice(), request.maxPrice()),
+                        createdAtBetween(request.registeredFrom(), request.registeredTo())
                 )
                 .fetchOne();
 
@@ -81,5 +69,32 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
 
     public static BooleanExpression vendorNameContains(String vendorName) {
         return StringUtils.hasText(vendorName) ? product.vendor.name.containsIgnoreCase(vendorName) : null;
+    }
+
+    private BooleanExpression unitPriceBetween(Long minPrice, Long maxPrice) {
+        if (minPrice != null && maxPrice != null) {
+            return product.unitPrice.between(minPrice, maxPrice);
+        } else if (minPrice != null) {
+            return product.unitPrice.goe(minPrice);
+        } else if (maxPrice != null) {
+            return product.unitPrice.loe(maxPrice);
+        }
+        return null;
+    }
+
+    private BooleanExpression createdAtBetween(LocalDate from, LocalDate to) {
+        if (from != null && to != null) {
+            return product.createdAt.between(
+                    from.atStartOfDay(),
+                    to.atTime(23, 59, 59)
+            );
+        }
+        if (from != null) {
+            return product.createdAt.goe(from.atStartOfDay());
+        }
+        if (to != null) {
+            return product.createdAt.loe(to.atTime(23, 59, 59));
+        }
+        return null;
     }
 }

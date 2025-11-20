@@ -20,7 +20,8 @@ public class ProductReadDto {
     private Long unitPrice;
     private String description;
     private ProductStatus status;
-    private VendorReadDto vendor; // ← VendorResponse 전체 포함 (C안)
+    private VendorReadDto vendor;
+    private String vendorName; // for ES
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -34,6 +35,7 @@ public class ProductReadDto {
                 .description(product.getDescription())
                 .status(product.getStatus())
                 .vendor(VendorReadDto.from(product.getVendor()))
+                .vendorName(product.getVendor() != null ? product.getVendor().getName() : null)
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();
