@@ -8,6 +8,7 @@ spring:
         nodes: ${REDIS_SENTINEL_NODES}
         master: ${REDIS_MASTER}
         password: ${REDIS_PASSWORD}
+        url: ${REDIS_URL}
 
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
