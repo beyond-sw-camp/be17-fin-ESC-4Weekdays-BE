@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
@@ -23,9 +23,14 @@ spring:
   autoconfigure:
     exclude:
       - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
   data:
     redis:
+      sentinel:
+        nodes: "disabled"
       host: localhost
       port: 6379
       password: qwer1234
+    redisson:
+      enabled: false

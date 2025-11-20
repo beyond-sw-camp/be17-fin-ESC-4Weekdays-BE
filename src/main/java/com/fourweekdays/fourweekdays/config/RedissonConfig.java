@@ -6,25 +6,31 @@ import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
+@Profile("!test")
 public class RedissonConfig {
 
-    @Value("${spring.data.redis.host}")
-    private String redisHost;
+    @Value("${redis.sentinel.nodes}")
+    private String sentinelNodes;
 
-    @Value("${spring.data.redis.port}")
-    private int redisPort;
+    @Value("${redis.sentinel.master}")
+    private String masterName;
 
-    @Value("${spring.data.redis.password}")
+    @Value("${redis.password}")
     private String redisPassword;
 
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        config.useSingleServer()
-                .setAddress("redis://" + redisHost + ":" + redisPort)
-                .setPassword(redisPassword);
+
+        config.useSentinelServers()
+                .addSentinelAddress(sentinelNodes.split(","))
+                .setMasterName(masterName)
+                .setPassword(redisPassword)
+                .setDatabase(0);
+
         return Redisson.create(config);
     }
 }

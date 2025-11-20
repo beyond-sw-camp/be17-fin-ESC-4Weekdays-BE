@@ -98,6 +98,7 @@ public class InventoryService {
                 .stream()
                 .mapToInt(Inventory::getQuantity)
                 .sum();
+
     }
 
     public int getTotalQuantityByLocation(Long locationId) {
@@ -107,8 +108,9 @@ public class InventoryService {
                 .sum();
     }
 
-    private void createOrIncreaseInventory(Long productId, Long locationId, String lotNumber,
-                                           Integer quantity, Long inboundId) {
+    @Transactional
+    public void createOrIncreaseInventory(Long productId, Long locationId, String lotNumber,
+                                          Integer quantity, Long inboundId) {
 
         // Lock 키 생성
         String inventoryLockKey = String.format("inventory:lock:%d:%d:%s", productId, locationId, lotNumber);
@@ -166,74 +168,6 @@ public class InventoryService {
 
         } finally {
             // 락 순서대로 해제 (location → inventory)
-            if (locationLock.isHeldByCurrentThread()) {
-                locationLock.unlock();
-            }
-            if (inventoryLock.isHeldByCurrentThread()) {
-                inventoryLock.unlock();
-            }
-        }
-    }
-
-    // 동시성 제어 테스트 전용 메서드
-    @Transactional
-    public void createInventoryForTest(Long productId, Long locationId,
-                                       String lotNumber, Integer quantity) {
-
-        String inventoryLockKey = String.format("inventory:lock:%d:%d:%s", productId, locationId, lotNumber);
-        String locationLockKey = String.format("location:lock:%d", locationId);
-
-        RLock inventoryLock = redissonClient.getLock(inventoryLockKey);
-        RLock locationLock = redissonClient.getLock(locationLockKey);
-
-        try {
-            // inventory 락 획득
-            boolean inventoryLocked = inventoryLock.tryLock(10, 5, TimeUnit.SECONDS);
-            if (!inventoryLocked) {
-                throw new InventoryException(LOCK_ACQUISITION_FAILED);
-            }
-
-            // location 락 획득
-            boolean locationLocked = locationLock.tryLock(10, 5, TimeUnit.SECONDS);
-            if (!locationLocked) {
-                inventoryLock.unlock();
-                throw new InventoryException(LOCK_ACQUISITION_FAILED);
-            }
-
-            // 재고 조회
-            Optional<Inventory> existing = inventoryRepository
-                    .findByProductAndLocationAndLotWithLock(productId, locationId, lotNumber);
-
-            if (existing.isPresent()) {
-                // 기존 재고 증가
-                Inventory inventory = existing.get();
-                inventory.increaseQuantity(quantity);
-
-            } else {
-                // 신규 생성
-                Product product = productRepository.findById(productId)
-                        .orElseThrow(() -> new InventoryException(INVENTORY_NOT_FOUND));
-
-                Location location = locationRepository.findById(locationId)
-                        .orElseThrow(() -> new InventoryException(LOCATION_NOT_FOUND));
-
-                location.increaseUsedCapacity(quantity);
-
-                Inventory newInv = Inventory.builder()
-                        .product(product)
-                        .location(location)
-                        .lotNumber(lotNumber)
-                        .quantity(quantity)
-                        .build();
-
-                inventoryRepository.save(newInv);
-            }
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new InventoryException(LOCK_INTERRUPTED);
-
-        } finally {
             if (locationLock.isHeldByCurrentThread()) {
                 locationLock.unlock();
             }

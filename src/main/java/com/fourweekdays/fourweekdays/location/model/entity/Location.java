@@ -45,14 +45,14 @@ public class Location extends BaseEntity {
     private String description; // 비고
 
     @Builder
-    public Location(String zone, String section, Long vendorId, Integer capacity,
+    public Location(String zone, String section, Long vendorId, Integer capacity,Integer usedCapacity,
                     LocationStatus status, String description) {
         this.zone = zone;
         this.section = section;
         this.locationCode = zone + "-" + section;
         this.vendorId = vendorId;
         this.capacity = capacity != null ? capacity : 15000;
-        this.usedCapacity = 0;
+        this.usedCapacity = usedCapacity != null ? usedCapacity : 0;
         this.status = status != null ? status : LocationStatus.AVAILABLE;
         this.description = description;
     }

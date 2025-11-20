@@ -1,5 +1,6 @@
 package com.fourweekdays.fourweekdays.redis.outbound;
 
+import com.fourweekdays.fourweekdays.config.RedissonTestConfig;
 import com.fourweekdays.fourweekdays.inventory.model.entity.Inventory;
 import com.fourweekdays.fourweekdays.inventory.repository.InventoryRepository;
 import com.fourweekdays.fourweekdays.location.model.entity.Location;
@@ -32,23 +33,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class OutboundApproveConcurrencyTest {
+@Import(RedissonTestConfig.class)
+class OutboundMultiProductConcurrencyTest {
 
     @Autowired private OutboundService outboundService;
 
     @Autowired private InventoryRepository inventoryRepository;
-    @Autowired private OutboundInventoryHistoryRepository outboundInventoryHistoryRepository;
-    @Autowired private OutboundProductItemRepository outboundProductItemRepository;
     @Autowired private OutboundRepository outboundRepository;
+    @Autowired private OutboundProductItemRepository outboundProductItemRepository;
+    @Autowired private OutboundInventoryHistoryRepository outboundInventoryHistoryRepository;
 
     @Autowired private OrderRepository orderRepository;
     @Autowired private OrderProductItemRepository orderProductItemRepository;
@@ -59,7 +67,10 @@ class OutboundApproveConcurrencyTest {
 
     @Autowired private MemberRepository memberRepository;
 
-    private Long outboundId;
+    private Product productA;
+    private Product productB;
+    private Long locationId;
+    private Member manager;
 
     @BeforeEach
     void setUp() {
@@ -70,125 +81,128 @@ class OutboundApproveConcurrencyTest {
         orderProductItemRepository.deleteAll();
         orderRepository.deleteAll();
         inventoryRepository.deleteAll();
-        locationRepository.deleteAll();
         productRepository.deleteAll();
         vendorRepository.deleteAll();
+        locationRepository.deleteAll();
         memberRepository.deleteAll();
 
-        // 관리자 생성
-        Member manager = Member.builder()
-                .name("관리자")
-                .email("admin@test.com")
-                .password("pw")
-                .role(MemberRole.ADMIN)
-                .status(AuthStatus.ACTIVE)
-                .build();
-        manager = memberRepository.save(manager);
+        manager = memberRepository.save(
+                Member.builder()
+                        .name("관리자")
+                        .email("admin@test.com")
+                        .password("pw")
+                        .role(MemberRole.ADMIN)
+                        .status(AuthStatus.ACTIVE)
+                        .build()
+        );
 
-        // 벤더 생성
-        Vendor vendor = Vendor.builder()
-                .vendorCode("V-TEST-001")
-                .name("테스트 벤더")
-                .phoneNumber("010-1111-2222")
-                .email("vendor@test.com")
-                .status(VendorStatus.ACTIVE)
-                .build();
-        vendor = vendorRepository.save(vendor);
+        Vendor vendor = vendorRepository.save(
+                Vendor.builder()
+                        .vendorCode("V001")
+                        .name("테스트 벤더")
+                        .status(VendorStatus.ACTIVE)
+                        .build()
+        );
 
-        // 로케이션 생성
-        Location location = Location.builder()
-                .zone("Z1")
-                .section("A")
-                .vendorId(vendor.getId())
-                .capacity(1000)
-                .status(LocationStatus.AVAILABLE)
-                .description("테스트 위치")
-                .build();
-        location = locationRepository.save(location);
+        Location location = locationRepository.save(
+                Location.builder()
+                        .zone("Z1")
+                        .section("A")
+                        .vendorId(vendor.getId())
+                        .capacity(5000)
+                        .usedCapacity(2000)
+                        .status(LocationStatus.AVAILABLE)
+                        .build()
+        );
+        locationId = location.getId();
 
-        // 상품 생성
-        Product product = Product.builder()
-                .productCode("P-TEST-001")
-                .name("테스트상품")
-                .unit("EA")
-                .unitPrice(1000L)
-                .status(ProductStatus.ACTIVE)
-                .vendor(vendor)
-                .build();
-        product = productRepository.save(product);
+        productA = productRepository.save(
+                Product.builder()
+                        .productCode("PRD-A")
+                        .name("상품A")
+                        .unit("EA")
+                        .unitPrice(100L)
+                        .status(ProductStatus.ACTIVE)
+                        .vendor(vendor)
+                        .build()
+        );
 
-        // 재고 생성
-        Inventory inventory = Inventory.builder()
-                .product(product)
-                .location(location)
-                .quantity(50)
-                .lotNumber("LOT-001")
-                .build();
-        inventory = inventoryRepository.save(inventory);
+        productB = productRepository.save(
+                Product.builder()
+                        .productCode("PRD-B")
+                        .name("상품B")
+                        .unit("EA")
+                        .unitPrice(100L)
+                        .status(ProductStatus.ACTIVE)
+                        .vendor(vendor)
+                        .build()
+        );
 
-        // 주문 생성
-        Order order = Order.builder()
-                .orderCode("O-TEST-001")
-                .status(OrderStatus.APPROVED)
-                .orderDate(LocalDateTime.now())
-                .dueDate(LocalDateTime.now())
-                .build();
-        order = orderRepository.save(order);
+        inventoryRepository.save(
+                Inventory.builder()
+                        .product(productA)
+                        .location(location)
+                        .lotNumber("LOT-A")
+                        .quantity(1000)
+                        .build()
+        );
 
-        // 주문 상품 생성
-        OrderProductItem opItem = OrderProductItem.builder()
-                .order(order)
-                .product(product)
-                .orderedQuantity(20)
-                .description("테스트 상품")
-                .build();
-        opItem = orderProductItemRepository.save(opItem);
-
-        // 출고 생성
-        Outbound outbound = Outbound.builder()
-                .outboundCode("OB-TEST-001")
-                .status(OutboundStatus.REQUESTED)
-                .outboundType(OutboundType.SALE)
-                .order(order)
-                .outboundManager(manager)
-                .scheduledDate(LocalDateTime.now())
-                .description("출고 테스트")
-                .build();
-        outbound = outboundRepository.save(outbound);
-
-        // 출고 상품 생성
-        OutboundProductItem outboundItem = OutboundProductItem.builder()
-                .outbound(outbound)
-                .product(product)
-                .orderProductItem(opItem)
-                .orderedQuantity(20)
-                .description("출고상품")
-                .build();
-        outboundProductItemRepository.save(outboundItem);
-
-        this.outboundId = outbound.getId();
+        inventoryRepository.save(
+                Inventory.builder()
+                        .product(productB)
+                        .location(location)
+                        .lotNumber("LOT-B")
+                        .quantity(1000)
+                        .build()
+        );
     }
 
     @Test
-    void outboundApproveConcurrencyTest() throws Exception {
+    void multiProductOutboundConcurrencyTest() throws Exception {
 
-        int users = 200;
+        List<Long> outboundIdsA = new ArrayList<>();
+        List<Long> outboundIdsB = new ArrayList<>();
 
-        ExecutorService executor = Executors.newFixedThreadPool(users);
-        CountDownLatch latch = new CountDownLatch(users);
+        createOutboundRequests(productA.getId(), outboundIdsA, manager, 100);
+        createOutboundRequests(productB.getId(), outboundIdsB, manager, 100);
+
+        int initialA = 1000;
+        int initialB = 1000;
+
+        int total = outboundIdsA.size() + outboundIdsB.size();
+
+        ExecutorService pool = Executors.newFixedThreadPool(64);
+        CountDownLatch latch = new CountDownLatch(total);
+
+        AtomicInteger success = new AtomicInteger();
+        AtomicInteger fail = new AtomicInteger();
+        AtomicInteger lockFailA = new AtomicInteger();
+        AtomicInteger lockFailB = new AtomicInteger();
 
         long start = System.currentTimeMillis();
 
-        int[] success = {0};
-        int[] lockingErrors = {0};
-
-        for (int i = 0; i < users; i++) {
-            executor.submit(() -> {
+        for (Long id : outboundIdsA) {
+            pool.submit(() -> {
                 try {
-                    outboundService.approveOutbound(outboundId);
-                    success[0]++;
+                    boolean ok = outboundService.approveOutbound(id);
+                    if (ok) success.incrementAndGet();
+                    else fail.incrementAndGet();
                 } catch (Exception e) {
-                    lockingErrors[0]++;
+                    lockFailA.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        for (Long id : outboundIdsB) {
+            pool.submit(() -> {
+                try {
+                    boolean ok = outboundService.approveOutbound(id);
+                    if (ok) success.incrementAndGet();
+                    else fail.incrementAndGet();
+                } catch (Exception e) {
+                    lockFailB.incrementAndGet();
                 } finally {
                     latch.countDown();
                 }
@@ -196,19 +210,121 @@ class OutboundApproveConcurrencyTest {
         }
 
         latch.await();
+        pool.shutdown();
+
         long end = System.currentTimeMillis();
 
-        int finalStock = inventoryRepository.findAll().stream()
-                .mapToInt(i -> i.getQuantity())
-                .sum();
+        int stockA = inventoryRepository.findByProductId(productA.getId())
+                .stream().mapToInt(Inventory::getQuantity).sum();
 
-        System.out.println("\n\n================= 🚚 출고 승인 동시성 테스트 =================");
-        System.out.println("시도한 승인 요청 수      : " + users);
-        System.out.println("승인 성공 횟수           : " + success[0]);
-        System.out.println("락 충돌 예외             : " + lockingErrors[0]);
-        System.out.println("최종 재고 수량           : " + finalStock);
-        System.out.println("총 소요 시간(ms)         : " + (end - start));
-        System.out.println("단일 승인 여부           : " + (success[0] == 1));
-        System.out.println("===============================================================\n\n");
+        int stockB = inventoryRepository.findByProductId(productB.getId())
+                .stream().mapToInt(Inventory::getQuantity).sum();
+
+        printResult(
+                total,
+                initialA,
+                initialB,
+                stockA,
+                stockB,
+                success.get(),
+                fail.get(),
+                (end - start),
+                lockFailA.get(),
+                lockFailB.get()
+        );
+
+        assertThat(success.get()).isEqualTo(200);
+        assertThat(stockA).isEqualTo(0);
+        assertThat(stockB).isEqualTo(0);
+    }
+
+    private void printResult(
+            int total,
+            int initialStockA,
+            int initialStockB,
+            int stockA,
+            int stockB,
+            int success,
+            int fail,
+            long timeMs,
+            int lockFailA,
+            int lockFailB
+    ) {
+        System.out.println("\n===================== 🔥 다중 상품 출고 동시성 테스트 =====================");
+
+        System.out.println("📌 총 요청한 사용자 수     : " + total);
+
+        System.out.println("📦 초기 재고(A)            : " + initialStockA);
+        System.out.println("📦 초기 재고(B)            : " + initialStockB);
+
+        System.out.println("🍎 남은 재고(A)            : " + stockA);
+        System.out.println("🍏 남은 재고(B)            : " + stockB);
+
+        System.out.println();
+        System.out.println("🟢 승인 성공               : " + success + " (" + calcPercent(success, total) + "%)");
+        System.out.println("🔴 승인 실패               : " + fail + " (" + calcPercent(fail, total) + "%)");
+
+        System.out.println();
+        System.out.println("🔒 락 획득 실패(A)         : " + lockFailA);
+        System.out.println("🔒 락 획득 실패(B)         : " + lockFailB);
+
+        System.out.println();
+        System.out.println("📤 총 요청 수              : " + total);
+        System.out.println("⏱  총 소요 시간           : " + timeMs + " ms (" + (timeMs / 1000.0) + " sec)");
+
+        double qps = total / (timeMs / 1000.0);
+        System.out.printf("🚀 평균 처리 속도(QPS)     : %.2f req/sec\n", qps);
+
+        System.out.println("======================================================================\n");
+    }
+
+    private String calcPercent(int value, int total) {
+        return String.format("%.2f", (value * 100.0 / total));
+    }
+
+    private void createOutboundRequests(Long productId, List<Long> targetList,
+                                        Member manager, int count) {
+
+        Product product = productRepository.findById(productId).orElseThrow();
+
+        for (int i = 0; i < count; i++) {
+
+            Order order = Order.builder()
+                    .orderCode("ORD-" + product.getProductCode() + "-" + i)
+                    .orderDate(LocalDateTime.now())
+                    .dueDate(LocalDateTime.now().plusDays(1))
+                    .status(OrderStatus.APPROVED)
+                    .build();
+
+            OrderProductItem item = OrderProductItem.builder()
+                    .product(product)
+                    .orderedQuantity(10)
+                    .build();
+
+            order.addItem(item);
+            order = orderRepository.save(order);
+
+            Outbound outbound = Outbound.builder()
+                    .outboundCode("OB-" + product.getProductCode() + "-" + i)
+                    .status(OutboundStatus.REQUESTED)
+                    .outboundType(OutboundType.SALE)
+                    .order(order)
+                    .outboundManager(manager)
+                    .scheduledDate(LocalDateTime.now())
+                    .build();
+
+            outbound = outboundRepository.save(outbound);
+
+            outboundProductItemRepository.save(
+                    OutboundProductItem.builder()
+                            .outbound(outbound)
+                            .product(product)
+                            .orderProductItem(item)
+                            .orderedQuantity(10)
+                            .build()
+            );
+
+            targetList.add(outbound.getId());
+        }
     }
 }
