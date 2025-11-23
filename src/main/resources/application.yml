@@ -85,3 +85,9 @@ management:
 #  level:
 #    org.hibernate.SQL: DEBUG
 #    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+#  REDIS_MASTER: mymaster
+#  REDIS_PASSWORD: qwer1234
+#  REDIS_SENTINEL_MASTER: mymaster
+#  REDIS_SENTINEL_NODES: redis-headless.fourweekdays-redis.svc.cluster.local:26379
+#  REDIS_URL: redis://redis-headless.fourweekdays-redis.svc.cluster.local:26379
