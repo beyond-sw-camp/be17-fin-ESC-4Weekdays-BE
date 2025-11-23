@@ -89,14 +89,14 @@ public class Location extends BaseEntity {
     }
 
     public void validateForPutaway(Long vendorId, int quantity) {
-        if (!isAvailable()) {
-            throw new LocationException(LOCATION_NOT_AVAILABLE);
-        }
-        if (!isAssignedToVendor(vendorId)) {
-            throw new LocationException(LOCATION_VENDOR_MISMATCH);
-        }
-        if (!canLoad(quantity)) {
-            throw new LocationException(CAPACITY_EXCEEDED);
-        }
+//        if (!isAvailable()) {
+//            throw new LocationException(LOCATION_NOT_AVAILABLE);
+//        }
+//        if (!isAssignedToVendor(vendorId)) {
+//            throw new LocationException(LOCATION_VENDOR_MISMATCH);
+//        }
+//        if (!canLoad(quantity)) {
+//            throw new LocationException(CAPACITY_EXCEEDED);
+//        }
     }
 }

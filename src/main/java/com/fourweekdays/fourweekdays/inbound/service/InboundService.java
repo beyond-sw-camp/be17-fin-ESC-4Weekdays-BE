@@ -20,6 +20,7 @@ import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
 import com.fourweekdays.fourweekdays.purchaseorder.repository.PurchaseOrderRepository;
 import com.fourweekdays.fourweekdays.tasks.factory.InboundTaskFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,7 @@ import static com.fourweekdays.fourweekdays.member.exception.MemberExceptionType
 import static com.fourweekdays.fourweekdays.product.exception.ProductExceptionType.PRODUCT_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.purchaseorder.exception.PurchaseOrderExceptionType.PURCHASE_ORDER_NOT_FOUND;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -70,11 +72,12 @@ public class InboundService {
                 .build();
 
         purchaseOrder.getProducts().forEach(purchaseOrderProduct -> {
+            log.info("purchaseOrderProduct.getOrderedQuantity()={}", purchaseOrderProduct.getOrderedQuantity());
             InboundProduct.builder()
                     .inbound(inbound)
                     .product(purchaseOrderProduct.getProduct())
                     .purchaseOrderProduct(purchaseOrderProduct)
-                    .receivedQuantity(0)
+                    .receivedQuantity(purchaseOrderProduct.getOrderedQuantity())
                     .description(purchaseOrderProduct.getDescription())
                     .build();
         });
@@ -105,6 +108,7 @@ public class InboundService {
     public void updateInboundStatus(Long inboundId, InboundStatusUpdateRequest requestDto) {
         Inbound inbound = inboundRepository.findById(inboundId)
                 .orElseThrow(() -> new InboundException(INBOUND_NOT_FOUND));
+        log.info("inbound={}", inbound.getProducts());
         inbound.updateStatus(requestDto.status());
     }
 

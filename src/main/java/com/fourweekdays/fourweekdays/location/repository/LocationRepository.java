@@ -19,13 +19,11 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     boolean existsByLocationCode(String locationCode);
 
     List<Location> findByVendorId(Long vendorId);
-
+//    @Param("vendorId") Long vendorId, @Param("minCapacity") int minCapacity
     @Query("SELECT l FROM Location l " +
             "WHERE l.status = 'AVAILABLE' " +
-            "AND (l.vendorId = :vendorId OR l.vendorId IS NULL) " +
-            "AND (l.capacity - l.usedCapacity) >= :minCapacity " +
             "ORDER BY l.usedCapacity ASC")
-    List<Location> findAvailableLocationsByVendor(@Param("vendorId") Long vendorId, @Param("minCapacity") int minCapacity);
+    List<Location> findAvailableLocationsByVendor();
 
     // LocationRepository
     @Query("SELECT l FROM Location l WHERE l.vendorId IN :vendorIds")

@@ -32,6 +32,7 @@ public class SecurityConfig {
     private static final String LOGIN_URL = "/api/login";
     private static final String[] API_WHITE_LIST = {
             "/api/asn/**",
+            "/api/vendor/asn/**",
             "/api/actuator/**"
     };
 

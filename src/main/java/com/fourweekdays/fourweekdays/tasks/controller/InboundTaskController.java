@@ -7,9 +7,11 @@ import com.fourweekdays.fourweekdays.tasks.model.dto.request.TaskCompleteRequest
 import com.fourweekdays.fourweekdays.tasks.service.InboundTaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequestMapping("/api/inbound-tasks")
 @RequiredArgsConstructor
 @RestController
@@ -25,14 +27,14 @@ public class InboundTaskController {
 
     @PostMapping("/putaway/{taskId}/assign-location")
     public ResponseEntity<BaseResponse<String>> assignLocationAndWorker(@PathVariable Long taskId,
-                                                                        @Valid @RequestBody PutawayLocationAssignRequest request) {
+                                                                        @RequestBody PutawayLocationAssignRequest request) {
         inboundTaskService.assignLocationAndWorker(taskId, request);
         return ResponseEntity.ok(BaseResponse.success("적치 위치 및 작업자 할당 완료"));
     }
 
     @PostMapping("/putaway/{taskId}/complete")
     public ResponseEntity<BaseResponse<String>> completePutaway(@PathVariable Long taskId,
-                                                                @Valid @RequestBody PutawayCompleteRequest request) {
+                                                                @RequestBody PutawayCompleteRequest request) {
         inboundTaskService.completePutawayTask(taskId, request);
         return ResponseEntity.ok(BaseResponse.success("적치 완료 및 재고 생성"));
     }

@@ -12,8 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.fourweekdays.fourweekdays.order.exception.OrderExceptionType.ORDER_CANNOT_REJECT;
-import static com.fourweekdays.fourweekdays.order.exception.OrderExceptionType.ORDER_NOT_FOUND;
+import static com.fourweekdays.fourweekdays.order.exception.OrderExceptionType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,5 +39,15 @@ public class OrderAdminService {
             throw new OrderException(ORDER_CANNOT_REJECT);
         }
         result.rejectByFranchise("관리자 요청에 의해 취소되었습니다.");
+    }
+
+    @Transactional
+    public void approveOrder(Long id) {
+        Order result = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND));
+        if (result.getStatus() != OrderStatus.REQUESTED) {
+            throw new OrderException(ORDER_CANNOT_APPROVED);
+        }
+        result.approveByManager();
     }
 }

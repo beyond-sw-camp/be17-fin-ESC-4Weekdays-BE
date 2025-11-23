@@ -23,8 +23,8 @@ public class LocationService {
 
     private final LocationRepository locationRepository;
 
-    public List<LocationResponse> getAvailableLocationsByVendor(Long vendorId, int minCapacity) {
-        List<Location> locations = locationRepository.findAvailableLocationsByVendor(vendorId, minCapacity);
+    public List<LocationResponse> getAvailableLocationsByVendor() {
+        List<Location> locations = locationRepository.findAvailableLocationsByVendor();
         return locations.stream()
                 .map(LocationResponse::from)
                 .toList();

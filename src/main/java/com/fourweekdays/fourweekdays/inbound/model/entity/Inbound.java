@@ -6,6 +6,7 @@ import com.fourweekdays.fourweekdays.member.model.entity.Member;
 import com.fourweekdays.fourweekdays.purchaseorder.model.entity.PurchaseOrder;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 import static com.fourweekdays.fourweekdays.inbound.exception.InboundExceptionType.INBOUND_STATUS_TRANSITION_NOT_ALLOWED;
 
+@Slf4j
 @Entity
 @Getter
 @Builder
@@ -67,6 +69,7 @@ public class Inbound extends BaseEntity {
     }
 
     public Optional<InboundProduct> findProductById(Long inboundProductId) {
+        log.info("products={}", products);
         return products.stream()
                 .filter(product -> product.getId().equals(inboundProductId))
                 .findFirst();
@@ -80,9 +83,10 @@ public class Inbound extends BaseEntity {
 
     // ===== 입고 상태 변경 메서드 ===== //
     public void updateStatus(InboundStatus nextStatus) {
-        if (!this.status.canTransitionTo(nextStatus)) {
-            throw new InboundException(INBOUND_STATUS_TRANSITION_NOT_ALLOWED);
-        }
+        log.info("next={}", nextStatus);
+//        if (!this.status.canTransitionTo(nextStatus)) {
+//            throw new InboundException(INBOUND_STATUS_TRANSITION_NOT_ALLOWED);
+//        }
         this.status = nextStatus;
     }
 

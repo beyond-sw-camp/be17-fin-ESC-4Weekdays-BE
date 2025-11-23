@@ -29,7 +29,7 @@ public class InventoryDocument {
     @Field(name = "productName", type = FieldType.Text, analyzer = "nori")
     private String productName;
 
-    @Field(name = "productCode", type = FieldType.Keyword)
+    @Field(name = "productCode", type = FieldType.Text, analyzer = "nori")
     private String productCode;
 
     @Field(name = "productStatus", type = FieldType.Keyword)

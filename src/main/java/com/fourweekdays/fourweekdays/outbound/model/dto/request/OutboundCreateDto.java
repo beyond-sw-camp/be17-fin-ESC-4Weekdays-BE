@@ -13,15 +13,15 @@ import java.time.LocalDateTime;
 @Builder
 public class OutboundCreateDto {
 
-    private Long orderId;
+    private String orderCode;
     private LocalDateTime scheduledDate; // 출고 예상 시간
     private String description;
 //     private List<InboundProductDto> items; // 직접/추가
 
-    public Outbound toEntity(String outboundCode, OutboundStatus status, Member manager) {
+    public Outbound toEntity(String outboundCode, OutboundStatus status, Member manager, Order order) {
         return Outbound.builder()
+                .order(order)
                 .outboundManager(manager)
-                .order(Order.builder().orderId(orderId).build())
                 .scheduledDate(scheduledDate)
                 .description(description)
                 .outboundCode(outboundCode)

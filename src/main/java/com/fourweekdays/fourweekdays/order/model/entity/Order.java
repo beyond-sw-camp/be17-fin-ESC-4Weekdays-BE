@@ -64,6 +64,10 @@ public class Order extends BaseEntity {
         this.status = OrderStatus.CANCELLED;
     }
 
+    public void approveByManager() {
+        this.status = OrderStatus.APPROVED;
+    }
+
     // ===== 비즈니스 로직 ===== //
     public void updateShipped() {
         this.status = OrderStatus.SHIPPED;

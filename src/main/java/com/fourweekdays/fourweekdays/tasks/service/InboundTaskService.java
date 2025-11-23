@@ -29,6 +29,7 @@ import com.fourweekdays.fourweekdays.tasks.repository.InspectionTaskRepository;
 import com.fourweekdays.fourweekdays.tasks.repository.PutawayTaskRepository;
 import com.fourweekdays.fourweekdays.tasks.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ import static com.fourweekdays.fourweekdays.inbound.exception.InboundExceptionTy
 import static com.fourweekdays.fourweekdays.location.exception.LocationExceptionType.LOCATION_NOT_FOUND;
 import static com.fourweekdays.fourweekdays.tasks.exception.TaskExceptionType.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class InboundTaskService {
@@ -50,6 +52,7 @@ public class InboundTaskService {
     private final LocationRepository locationRepository;
     private final TaskRepository taskRepository;
 
+
     @Transactional
     public void completeInspection(Long taskId, TaskCompleteRequest request) {
         InspectionTask inspectionTask = inspectionTaskRepository.findByTaskId(taskId)
@@ -58,8 +61,9 @@ public class InboundTaskService {
                 .orElseThrow(() -> new TaskException(TASK_NOT_FOUND));
 
         task.complete(request.note()); // 단일 트랜잭션으로 변경
-
         // TODO: status 업데이트 구문을 dto가 아닌 방식도 생각해보자.
+
+        log.info(request.note());
         inboundService.updateInboundStatus(inspectionTask.getInboundId(), new InboundStatusUpdateRequest(InboundStatus.PUTAWAY));
 
         // 검수 완료시에는 적치 위치가 지정되지 않은 적치 작업이 자동으로 생성

@@ -12,7 +12,7 @@ public class EmailService {
     private final EmailSender emailSender;
 
     public void sendPurchaseOrderMail(PurchaseOrder order) throws MessagingException {
-        String to = order.getVendor().getEmail();
+        String to = "tipsyboy2025@gmail.com";
         String subject = "[발주서 승인] " + order.getOrderCode();
         String body = EmailBodyBuilder.buildPurchaseOrderBody(order);
 

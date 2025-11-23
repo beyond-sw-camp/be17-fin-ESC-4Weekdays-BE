@@ -18,9 +18,8 @@ public class LocationController {
     private final LocationService locationService;
 
     @GetMapping("/available")
-    public ResponseEntity<BaseResponse<List<LocationResponse>>> getAvailableLocations(@RequestParam Long vendorId,
-                                                                                      @RequestParam(required = false, defaultValue = "0") int minCapacity) {
-        return ResponseEntity.ok(BaseResponse.success(locationService.getAvailableLocationsByVendor(vendorId, minCapacity)));
+    public ResponseEntity<BaseResponse<List<LocationResponse>>> getAvailableLocations() {
+        return ResponseEntity.ok(BaseResponse.success(locationService.getAvailableLocationsByVendor()));
     }
 
     @GetMapping("/{locationCode}")

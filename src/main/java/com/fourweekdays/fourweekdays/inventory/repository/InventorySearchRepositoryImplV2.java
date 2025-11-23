@@ -114,12 +114,19 @@ public class InventorySearchRepositoryImplV2 implements InventorySearchRepositor
 
         // 상품명 (부분 검색)
         if (hasText(request.productName())) {
-            criteria = criteria.and(new Criteria("name").contains(request.productName()));
+            String productName = request.productName();
+            // 공백으로 분리 후 각각 OR 조건
+            String[] keywords = productName.split("\\s+");
+            Criteria nameCriteria = new Criteria();
+            for (String keyword : keywords) {
+                nameCriteria = nameCriteria.or(new Criteria("name").contains(keyword));
+            }
+            criteria = criteria.and(nameCriteria);
         }
 
-        // 상품코드 (부분 검색 허용)
         if (hasText(request.productCode())) {
-            criteria = criteria.and(new Criteria("productCode").contains(request.productCode()));
+            // Keyword 필드도 와일드카드로 부분검색 가능하게 변경
+            criteria = criteria.and(new Criteria("productCode").expression("*" + request.productCode() + "*"));
         }
 
         // 상품 상태 (정확 매칭)

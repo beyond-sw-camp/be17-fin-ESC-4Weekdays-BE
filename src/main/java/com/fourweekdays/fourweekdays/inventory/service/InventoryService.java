@@ -16,6 +16,7 @@ import com.fourweekdays.fourweekdays.location.repository.LocationRepository;
 import com.fourweekdays.fourweekdays.product.model.entity.Product;
 import com.fourweekdays.fourweekdays.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import static com.fourweekdays.fourweekdays.inventory.exception.InventoryExceptionType.*;
 import static com.fourweekdays.fourweekdays.location.exception.LocationExceptionType.LOCATION_NOT_FOUND;
 
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -53,6 +55,7 @@ public class InventoryService {
 
         // 모든 InboundProduct를 순회하며 재고 생성
         for (InboundProduct inboundProduct : inbound.getProducts()) {
+            log.info("inboundProduct.getReceivedQuantity()={}", inboundProduct.getReceivedQuantity());
             createOrIncreaseInventory(
                     inboundProduct.getProduct().getId(),
                     location.getId(),
